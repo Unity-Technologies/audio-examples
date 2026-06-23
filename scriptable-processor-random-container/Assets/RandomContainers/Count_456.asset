@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9213dd4641b3144b4be6d749f043c1c7, type: 3}
+  m_Name: Count_456
+  m_EditorClassIdentifier: Assembly-CSharp::RandomContainerAsset
+  children:
+  - Reference: {fileID: 8300000, guid: 0fb798c2e2f81471588ffb730a460bed, type: 3}
+  - Reference: {fileID: 8300000, guid: 4f841946d0d134d03a868fb19ae6bc7e, type: 3}
+  - Reference: {fileID: 8300000, guid: f592e664f378b433f924c3ec26eb5258, type: 3}
+  id: 0
+  mode: 0
+  maxPlayCount: 10
+  interval: 0.5
+  randomizeLevel: 0
+  randomizePitch: 0

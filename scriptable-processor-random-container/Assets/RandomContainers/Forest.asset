@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9213dd4641b3144b4be6d749f043c1c7, type: 3}
+  m_Name: Forest
+  m_EditorClassIdentifier: Assembly-CSharp::RandomContainerAsset
+  children:
+  - Reference: {fileID: 8300000, guid: 6c68f103613034d02b9bd7f9c0a08ea6, type: 3}
+  - Reference: {fileID: 8300000, guid: 76efdb74cba0a47429426c7504d6aee5, type: 3}
+  - Reference: {fileID: 8300000, guid: 90805e34516144acb91d3339c975fcf4, type: 3}
+  - Reference: {fileID: 8300000, guid: 448b07e2b23de4547ba32dba390d37fd, type: 3}
+  - Reference: {fileID: 8300000, guid: 2a7a0fa62935345a288440f65f3d86a6, type: 3}
+  - Reference: {fileID: 8300000, guid: 86a4a12539add4737ba425cc413d3dd0, type: 3}
+  - Reference: {fileID: 8300000, guid: 87392457114bd4e36933e9f6ca12f501, type: 3}
+  - Reference: {fileID: 8300000, guid: 6ee285ae91b924ef29d626833e876ea8, type: 3}
+  - Reference: {fileID: 8300000, guid: 9025960e637e246da9afa188feb34420, type: 3}
+  - Reference: {fileID: 8300000, guid: 64cb1141d2e304db4b72760bdf6bb041, type: 3}
+  - Reference: {fileID: 8300000, guid: 2ebc6773a467048a6bbcef2b160f5dd3, type: 3}
+  - Reference: {fileID: 8300000, guid: 46c25c8dce7234d4a846bcc81b29aafd, type: 3}
+  - Reference: {fileID: 8300000, guid: bcad946c953d240c88eb8fde84495849, type: 3}
+  - Reference: {fileID: 8300000, guid: 0ad13b6fd17a34fd49bafe8d70dc9530, type: 3}
+  - Reference: {fileID: 8300000, guid: cc7cd0201c41d4ae787b8ab4935e3e29, type: 3}
+  - Reference: {fileID: 8300000, guid: 7242b2b41487b4118b7a6d40fc9fb3fb, type: 3}
+  id: 0
+  mode: 1
+  maxPlayCount: 10000
+  interval: 0.5
+  randomizeLevel: 6
+  randomizePitch: 0
