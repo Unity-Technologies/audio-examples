@@ -66,3 +66,16 @@ Assets/NetCodeGenerated*
 .DS_Store
 RiderScriptEditorPersistedState.asset
 .claude/
+
+# Console / restricted-platform settings. Unity regenerates these whenever the matching closed
+# platform module is installed (PS5, GameCore/Xbox, Switch/Kepler, QNX, EmbeddedLinux), so they vary
+# per machine and aren't needed for these cross-platform audio examples. The rest of ProjectSettings
+# is still committed.
+PS4Settings.json
+PS5Settings.json
+KeplerSettings.json
+QNXSettings.json
+EmbeddedLinuxSettings.json
+GameCore*Settings.asset
+ScarlettGame.config
+XboxOneGame.config
