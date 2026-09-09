@@ -16,6 +16,7 @@ The scene contains a single **Seek Tester** GameObject (a `SeekTester` plus a `C
 - Pick **when** a seek should fire (the clip second at which it triggers) with the slider, then click a **number button** to enqueue "when the clip reaches that second, jump so I hear number N".
 - Enable **Fire immediately** to ignore `when` and seek at the next process block instead.
 - You can build a queue while stopped; it is delivered when you press **Play**, so several seeks end up scheduled together in the sample provider's own queue.
+- The panel schedules on whole-second boundaries for legibility; `SeekMessage` itself accepts any `DiscreteTime`.
 
 The clip counts "one" through "ten" over roughly ten seconds, so the audible result makes each seek easy to verify by ear.
 
@@ -49,11 +50,3 @@ The implementation is two small `MonoBehaviour`s in `Assets/Scripts/`.
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | `ClipPlayerGenerator.cs`   | An `IAudioGenerator` that plays an `AudioClip` through the sample-provider path (`clip.CreateInstance`). That path is the one that handles seeks. It mirrors the clip's own generator metadata (`isFinite`, `length`) so the wrapper stays consistent with the instance it produces. |
 | `SeekTester.cs`            | A manual seek playground. Wires the generator onto an `AudioSource`, draws the GUI transport, and sends `SeekMessage`s to the live instance. |
-
-## Notes
-
-This is a teaching example. A few things are intentionally simple:
-
-- **Single clip, seconds-resolution UI**: The panel schedules on whole-second boundaries for legibility; `SeekMessage` itself accepts any `DiscreteTime`.
-- **IMGUI**: The UI is `OnGUI` so the example needs no UI assets or scene setup beyond the two components.
-- **No render pipeline**: This is an audio demo. The scene ships with only a camera (for its `AudioListener`) and the demo object.
