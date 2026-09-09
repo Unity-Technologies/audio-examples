@@ -37,6 +37,7 @@ public class SeekTester : MonoBehaviour
     int m_WhenSecond;            // slider value
     bool m_Immediate;           // send with immediate 'when'
     bool m_FlushRequested;      // deliver the queue once the generator instance is live
+    bool m_InstanceSeen;        // the generator instance has existed at least once this play session
 
     void Start()
     {
@@ -64,6 +65,19 @@ public class SeekTester : MonoBehaviour
         {
             FlushQueue();
             m_FlushRequested = false;
+        }
+
+        // Reset the transport once the clip runs out. A generator-driven AudioSource keeps reporting
+        // isPlaying after its instance is gone, so stop it explicitly to put the button back to "Play".
+        // The instance is absent for a frame or so right after Play(), hence the latch.
+        if (InstanceLive())
+        {
+            m_InstanceSeen = true;
+        }
+        else if (m_InstanceSeen)
+        {
+            m_InstanceSeen = false;
+            m_Source.Stop();
         }
     }
 
