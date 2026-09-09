@@ -42,9 +42,8 @@ public class SeekTester : MonoBehaviour
     {
         m_Generator = GetComponent<ClipPlayerGenerator>();
 
-        if (m_Generator.clip != null)
-            m_Generator.clip.LoadAudioData();
-
+        // No explicit LoadAudioData() here: the sample provider backend honors the clip's own import
+        // settings (load type, preload, load in background) and loads it as part of CreateInstance.
         m_Source = GetComponent<AudioSource>();
         if (m_Source == null)
             m_Source = gameObject.AddComponent<AudioSource>();
