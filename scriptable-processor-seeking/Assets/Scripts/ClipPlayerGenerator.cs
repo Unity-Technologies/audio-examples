@@ -104,7 +104,7 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
             // Process call, and before SeekTester can send anything.
             var clip = (IAudioGenerator)m_ClipHandle.Target;
 
-            m_Nested = clip.CreateInstance(context, format, default);
+            m_Nested = clip.CreateInstance(context, format, default(GeneratorInstance.CreationParameters));
             m_NestedCreated = true;
         }
         else
@@ -114,11 +114,15 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
         }
 
         // Run at exactly the clip's own rate and channel layout, so this wrapper stays consistent with
-        // the instance it drives and the host handles any conversion.
-        setup = context.GetConfiguration(m_Nested).setup;
+        // the instance it drives and the host handles any conversion. If the nested instance could not
+        // be created, fall back to the host's suggested format: reporting an unset setup here surfaces
+        // as an invalid speakerMode inside Process and aborts the audio thread from Burst.
+        setup = m_NestedCreated
+            ? context.GetConfiguration(m_Nested).setup
+            : new GeneratorInstance.Setup(format);
 
         realtime.nested = m_Nested;
-        realtime.nestedValid = true;
+        realtime.nestedValid = m_NestedCreated;
     }
 
     public ProcessorInstance.Response OnMessage(ControlContext context, ProcessorInstance.Pipe pipe,
@@ -195,7 +199,7 @@ public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
     public DiscreteTime? length => clip != null ? ((IAudioGenerator)clip).length : null;
 
     // Called by the audio system when the AudioSource starts playing this generator.
-    public GeneratorInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat, ProcessorInstance.CreationParameters parameters)
+    public GeneratorInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat, GeneratorInstance.CreationParameters parameters)
     {
         if (clip == null)
         {
@@ -218,7 +222,7 @@ public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
 
         // UpdateAlways so the control side pumps the nested instance every frame, rather than only when
         // pipe data happens to be waiting.
-        var creationParameters = new ProcessorInstance.CreationParameters
+        var creationParameters = new GeneratorInstance.CreationParameters
         {
             controlUpdateSetting = ProcessorInstance.UpdateSetting.UpdateAlways,
             realtimeUpdateSetting = ProcessorInstance.UpdateSetting.UpdateAlways
