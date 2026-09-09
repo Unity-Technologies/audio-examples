@@ -153,7 +153,9 @@ public class SeekTester : MonoBehaviour
         m_Immediate = GUILayout.Toggle(m_Immediate, "Fire immediately (ignore 'when')");
         GUI.enabled = !m_Immediate;
         GUILayout.Label($"Fire when clip reaches second: {m_WhenSecond}");
-        m_WhenSecond = Mathf.RoundToInt(GUILayout.HorizontalSlider(m_WhenSecond, 0, maxSec));  // stepped 0..N
+        // Stops one second short of the clip's end: a seek scheduled for the last second could never
+        // fire, because playback ends at the moment it would be reached.
+        m_WhenSecond = Mathf.RoundToInt(GUILayout.HorizontalSlider(m_WhenSecond, 0, maxSec - 1));
         GUI.enabled = true;
 
         GUILayout.Space(8);
