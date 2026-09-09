@@ -4,7 +4,7 @@ This example demonstrates **seeking** for scriptable processors: repositioning a
 
 The project targets Unity 6.7 and is built on the [Scriptable audio pipeline][manual] APIs. Seeking is delivered to a live generator instance with `SeekMessage`.
 
-[manual]: https://docs.unity3d.com/6000.3/Documentation/Manual/audio-scriptable-processors.html
+[manual]: https://docs.unity3d.com/6000.7/Documentation/Manual/audio-scriptable-processors.html
 
 ## Run the demo
 
