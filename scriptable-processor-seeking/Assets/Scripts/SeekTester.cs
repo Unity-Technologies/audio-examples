@@ -126,7 +126,6 @@ public class SeekTester : MonoBehaviour
         GUILayout.Label($"Playing: {m_Source.isPlaying}");
 
         // --- Transport ---
-        GUILayout.BeginHorizontal();
         if (GUILayout.Button(m_Source.isPlaying ? "Stop" : "Play"))
         {
             if (m_Source.isPlaying)
@@ -147,9 +146,6 @@ public class SeekTester : MonoBehaviour
                 m_FlushRequested = true;   // deliver whatever is queued once it's live
             }
         }
-        if (GUILayout.Button("Send queue now"))
-            m_FlushRequested = true;
-        GUILayout.EndHorizontal();
 
         GUILayout.Space(8);
 
