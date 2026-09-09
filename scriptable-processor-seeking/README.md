@@ -39,7 +39,7 @@ The instance only exists a frame or so after `AudioSource.Play()`, so `SeekTeste
 
 Seeks can be scheduled in **any order** — the sample provider fires each one when playback reaches its `when`. A seek whose `when` playback has **already passed** (for example, one made unreachable by an earlier seek that jumped past it) is silently dropped rather than applied.
 
-[integertime]: https://docs.unity3d.com/6000.3/Documentation/Manual/audio-scriptable-processors-concepts.html
+[integertime]: https://docs.unity3d.com/6000.7/Documentation/ScriptReference/Unity.IntegerTime.DiscreteTime.html
 
 ## The scripts
 
