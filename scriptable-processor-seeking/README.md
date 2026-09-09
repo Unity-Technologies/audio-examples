@@ -10,7 +10,7 @@ The project targets Unity 6.7 and is built on the [Scriptable audio pipeline][ma
 
 Open the project in Unity 6.7, open `Assets/Scenes/Seeking.unity`, and enter Play Mode.
 
-The scene contains a single **Seek Tester** GameObject (a `SeekTester` plus a `ClipPlayerGenerator` with `Count1To10.wav` assigned) and a Main Camera that provides the `AudioListener`. An IMGUI panel appears in the top-left in Play Mode:
+The scene contains a single **Seek Tester** GameObject (a `SeekTester` plus a `ClipPlayerGenerator` with `Count1To10.wav` assigned) and a Main Camera that provides the `AudioListener`. A GUI panel appears in the top-left in Play Mode:
 
 - Playback starts **stopped**. Use the **Play/Stop** button.
 - Pick **when** a seek should fire (the clip second at which it triggers) with the slider, then click a **number button** to enqueue "when the clip reaches that second, jump so I hear number N".
@@ -48,7 +48,7 @@ The implementation is two small `MonoBehaviour`s in `Assets/Scripts/`.
 | File                       | Role                                                                                                                                          |
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
 | `ClipPlayerGenerator.cs`   | An `IAudioGenerator` that plays an `AudioClip` through the sample-provider path (`clip.CreateInstance`). That path is the one that handles seeks. It mirrors the clip's own generator metadata (`isFinite`, `length`) so the wrapper stays consistent with the instance it produces. |
-| `SeekTester.cs`            | A manual seek playground. Wires the generator onto an `AudioSource`, draws the IMGUI transport, and sends `SeekMessage`s to the live instance. |
+| `SeekTester.cs`            | A manual seek playground. Wires the generator onto an `AudioSource`, draws the GUI transport, and sends `SeekMessage`s to the live instance. |
 
 ## Notes
 
