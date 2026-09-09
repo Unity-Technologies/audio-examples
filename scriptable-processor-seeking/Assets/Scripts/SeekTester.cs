@@ -37,7 +37,6 @@ public class SeekTester : MonoBehaviour
     int m_WhenSecond;            // slider value
     bool m_Immediate;           // send with immediate 'when'
     bool m_FlushRequested;      // deliver the queue once the generator instance is live
-    bool m_InstanceSeen;        // the generator instance has existed at least once this play session
 
     void Start()
     {
@@ -68,15 +67,12 @@ public class SeekTester : MonoBehaviour
         }
 
         // Reset the transport once the clip runs out. A generator-driven AudioSource keeps reporting
-        // isPlaying after its instance is gone, so stop it explicitly to put the button back to "Play".
-        // The instance is absent for a frame or so right after Play(), hence the latch.
-        if (InstanceLive())
+        // isPlaying until something stops it explicitly, and the clip finishing is only visible on the
+        // realtime thread -- so ClipPlayerGenerator relays it to the main thread for us.
+        var state = m_Generator.playbackState;
+        if (state != null && state.finished && m_Source.isPlaying)
         {
-            m_InstanceSeen = true;
-        }
-        else if (m_InstanceSeen)
-        {
-            m_InstanceSeen = false;
+            state.finished = false;
             m_Source.Stop();
         }
     }
