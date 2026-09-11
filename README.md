@@ -9,6 +9,7 @@ Each project is a standalone Unity project; open its folder in the required Unit
 | Project | Description | Required Unity version |
 | ------- | ----------- | ---------------------- |
 | [Scriptable Processor Random Container](scriptable-processor-random-container) | Implements a simplified version of the Audio Random Container using nested generators. | 6.5 |
+| [Scriptable Processor Effect Rack](scriptable-processor-effect-rack) | Builds a rack of scriptable effects on one AudioSource at runtime, turning a spoken clip into radio chatter. | 6.7 |
 
 ## License
 
