@@ -59,12 +59,12 @@ namespace RadioEffectRack
         }
 
         /// <summary>
-        /// Sent by the UI to read the newest levels out. The caller owns the destination array; the
-        /// control part fills one entry per band, lowest first.
+        /// Sent by the UI to read the newest levels out. Messages are passed by reference, so the control
+        /// part answers by writing the whole reading into the message, lowest band first.
         /// </summary>
         internal struct LevelQuery
         {
-            internal NativeArray<float> destination;
+            internal float4x4 levels;
             internal bool hasLevels;
         }
 
@@ -207,23 +207,13 @@ namespace RadioEffectRack
 
                 Drain(context, pipe);
 
+                // Get returns a reference to the caller's own message, so writing to it is the reply. All
+                // sixteen bands fit in one float4x4, so the whole reading goes back by value and the UI
+                // shares no memory with the effect.
                 ref var query = ref message.Get<LevelQuery>();
-                var destination = query.destination;
 
-                if (!destination.IsCreated || !m_HasReading || destination.Length < k_BandCount)
-                {
-                    query.hasLevels = false;
-
-                    return Response.Handled;
-                }
-
-                // One entry per band, lowest first.
-                for (var band = 0; band < k_BandCount; band++)
-                {
-                    destination[band] = m_Latest.levels[band >> 2][band & 3];
-                }
-
-                query.hasLevels = true;
+                query.levels = m_Latest.levels;
+                query.hasLevels = m_HasReading;
 
                 return Response.Handled;
             }
@@ -268,7 +258,7 @@ namespace RadioEffectRack
     public class SpectrumEffect : MonoBehaviour, IAudioEffect
     {
         AudioSource m_Source;
-        NativeArray<float> m_Levels;
+        float4x4 m_Levels;
 
         /// <summary>How many bands a reading holds, lowest first.</summary>
         public int bandCount => SpectrumProcessor.k_BandCount;
@@ -279,8 +269,15 @@ namespace RadioEffectRack
         /// <summary>Centre frequency of the highest band.</summary>
         public float highestHz => SpectrumProcessor.k_HighestHz;
 
-        /// <summary>The level of one band from the last read.</summary>
-        public float Level(int band) => m_Levels.IsCreated ? m_Levels[band] : 0f;
+        /// <summary>The level of one band from the last read, lowest band first.</summary>
+        public float Level(int band)
+        {
+            if (band < 0 || band >= SpectrumProcessor.k_BandCount)
+                return 0f;
+
+            // Four bands to a column, the same packing the reading arrives in.
+            return m_Levels[band >> 2][band & 3];
+        }
 
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
@@ -299,32 +296,24 @@ namespace RadioEffectRack
         /// <summary>Reads the newest levels out of the running effect. False when it isn't running.</summary>
         public bool TryReadLevels()
         {
-            if (!m_Levels.IsCreated)
-                return false;
-
             var instance = m_Source.GetEffectInstance(this);
 
             if (!ControlContext.builtIn.Exists(instance))
                 return false;
 
-            var query = new SpectrumProcessor.LevelQuery { destination = m_Levels };
+            var query = new SpectrumProcessor.LevelQuery();
 
-            if (ControlContext.builtIn.SendMessage(instance, ref query) != Response.Handled)
+            if (ControlContext.builtIn.SendMessage(instance, ref query) != Response.Handled || !query.hasLevels)
                 return false;
 
-            return query.hasLevels;
+            m_Levels = query.levels;
+
+            return true;
         }
 
         void Awake()
         {
             m_Source = GetComponent<AudioSource>();
-            m_Levels = new NativeArray<float>(SpectrumProcessor.k_BandCount, Allocator.Persistent);
-        }
-
-        void OnDestroy()
-        {
-            if (m_Levels.IsCreated)
-                m_Levels.Dispose();
         }
     }
 }
