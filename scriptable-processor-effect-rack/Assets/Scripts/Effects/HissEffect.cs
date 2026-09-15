@@ -118,10 +118,7 @@ namespace RadioEffectRack
                 // was just built with this format, and asking again is a recursive configuration change that
                 // the audio system rejects.
                 if (context.IsSystemWideReconfiguring)
-                {
-                    context.Configure(m_Noise, new AudioFormat(configuration.speakerMode,
-                        configuration.sampleRate, configuration.dspBufferSize));
-                }
+                    context.Configure(m_Noise, new AudioFormat(configuration));
             }
 
             public void Dispose(ControlContext context, ref HissProcessor processor)
@@ -160,19 +157,20 @@ namespace RadioEffectRack
         [Range(-80f, -12f)] public float levelDb = -44f;
 
         AudioSource m_Source;
-        AudioFormat m_Format;
-        uint m_Seed;
         float m_SentLevelDb;
 
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
         {
             // A child is created with the format it will be rendered at: the owner's when nested, otherwise
-            // the system configuration.
-            var format = nestedFormat ?? m_Format;
+            // the system configuration. CreateInstance only ever runs on the main thread, so the
+            // configuration and the seed are read here rather than cached, and cannot go stale when the
+            // output device changes between one instance and the next.
+            var format = nestedFormat ?? new AudioFormat(AudioSettings.GetConfiguration());
             var level = DecibelToLinear(levelDb);
+            var seed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
 
-            var noise = context.AllocateGenerator(new WhiteNoiseGenerator(m_Seed),
+            var noise = context.AllocateGenerator(new WhiteNoiseGenerator(seed),
                 new WhiteNoiseGenerator.Control(), format);
 
             // CreationParameters is one flags word, and the defaults are only substituted when the whole
@@ -193,14 +191,6 @@ namespace RadioEffectRack
         {
             m_Source = GetComponent<AudioSource>();
             m_SentLevelDb = levelDb;
-
-            // Both are main-thread APIs, and CreateInstance runs whenever the audio system wants an
-            // instance. Configure keeps the child in step if the configuration changes later.
-            m_Seed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
-
-            var configuration = AudioSettings.GetConfiguration();
-            m_Format = new AudioFormat(configuration.speakerMode, configuration.sampleRate,
-                configuration.dspBufferSize);
         }
 
         void Update()
