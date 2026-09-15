@@ -54,7 +54,7 @@ namespace RadioEffectRack
                 out GeneratorInstance.Setup setup, ref GeneratorInstance.Properties properties)
             {
                 // Noise sounds the same at any rate, so match the owner and leave nothing to convert.
-                setup = new GeneratorInstance.Setup(format.speakerMode, format.sampleRate);
+                setup = new GeneratorInstance.Setup(format);
             }
 
             public void Dispose(ControlContext context, ref WhiteNoiseGenerator realtime) { }
