@@ -1,8 +1,9 @@
+using System;
 using Unity.Burst;
 using Unity.IntegerTime;
-using Unity.Mathematics;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
+using Random = Unity.Mathematics.Random;
 
 namespace RadioEffectRack
 {

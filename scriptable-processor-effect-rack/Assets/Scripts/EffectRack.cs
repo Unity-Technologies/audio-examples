@@ -46,9 +46,9 @@ namespace RadioEffectRack
         // Added in the order they run in, so a rack reads top to bottom like the chain it builds.
         static readonly Preset[] k_Presets =
         {
-            new Preset("Handheld radio", BuildHandheldRadio),
-            new Preset("Blown speaker", BuildBlownSpeaker),
-            new Preset("Spectrum only", BuildSpectrumOnly),
+            new("Handheld radio", BuildHandheldRadio),
+            new("Blown speaker", BuildBlownSpeaker),
+            new("Spectrum only", BuildSpectrumOnly),
         };
 
         const float k_PanelWidth = 440f;
@@ -65,16 +65,16 @@ namespace RadioEffectRack
         Action<GameObject> m_PendingRack;
         int m_PendingKeepCount;
 
-        readonly List<Behaviour> m_Reordered = new List<Behaviour>();
+        readonly List<Behaviour> m_Reordered = new();
 
-        readonly List<Type> m_AddableTypes = new List<Type>();
-        readonly List<string> m_AddableLabels = new List<string>();
+        readonly List<Type> m_AddableTypes = new();
+        readonly List<string> m_AddableLabels = new();
 
-        readonly List<string> m_PresetLabels = new List<string>();
+        readonly List<string> m_PresetLabels = new();
 
         // Reused, so the per-frame refresh allocates nothing.
-        readonly List<Component> m_Components = new List<Component>();
-        readonly List<Behaviour> m_Effects = new List<Behaviour>();
+        readonly List<Component> m_Components = new();
+        readonly List<Behaviour> m_Effects = new();
 
         // Sampled once per frame, not from OnGUI: IMGUI needs the same controls in its layout and
         // repaint passes, and OnGUI runs several times per frame.
@@ -106,11 +106,11 @@ namespace RadioEffectRack
 
             foreach (var effect in m_Effects)
             {
-                if (effect != null && effect is NoiseGateEffect gate)
+                if (effect && effect is NoiseGateEffect gate)
                     m_HasEnvelope = gate.TryGetEnvelope(out m_EnvelopeDb, out m_GateIsOpen);
             }
 
-            m_HasSpectrum = m_Spectrum != null && m_Spectrum.TryReadLevels();
+            m_HasSpectrum = m_Spectrum && m_Spectrum.TryReadLevels();
 
             // Destroy is deferred to end of frame, AddComponent is immediate. Build only once the old
             // effects have gone, or the dying ones sit in the chain ahead of the new ones.
@@ -138,10 +138,10 @@ namespace RadioEffectRack
             foreach (var component in m_Components)
             {
                 // A destroyed component can still be listed. Unity's == operator is what reports that.
-                if (component == null)
+                if (!component)
                     continue;
 
-                if (component is IAudioEffect && component is Behaviour behaviour)
+                if (component is IAudioEffect and Behaviour behaviour)
                     m_Effects.Add(behaviour);
 
                 if (component is SpectrumEffect spectrum)
@@ -175,11 +175,12 @@ namespace RadioEffectRack
             GUILayout.BeginArea(new Rect(k_PanelMargin, k_PanelMargin, width, height), GUI.skin.box);
 
             var clip = m_Source.clip;
-            GUILayout.Label(clip != null
+            GUILayout.Label(clip
                 ? $"Clip: {clip.name}  ({clip.length:0.0}s @ {clip.frequency} Hz)"
                 : "Assign a clip on the AudioSource.");
 
             GUILayout.BeginHorizontal();
+            
             if (GUILayout.Button(m_Source.isPlaying ? "Stop" : "Play"))
             {
                 if (m_Source.isPlaying)
@@ -218,7 +219,7 @@ namespace RadioEffectRack
             {
                 var effect = m_Effects[index];
 
-                if (effect == null)
+                if (!effect)
                     continue;
 
                 GUILayout.BeginVertical(GUI.skin.box);
@@ -297,7 +298,7 @@ namespace RadioEffectRack
 
             // After the layout, so the set of controls cannot change mid-frame. The audio source
             // rediscovers its effects when the components change.
-            if (pendingRemoval != null)
+            if (pendingRemoval)
             {
                 // Forget it first: nothing drawn later this cycle should reach a component on its way out.
                 m_Effects.Remove(pendingRemoval);
@@ -379,10 +380,10 @@ namespace RadioEffectRack
         /// <summary>Draws the band levels as a histogram, lowest frequency on the left.</summary>
         void DrawSpectrum()
         {
-            var bands = m_Spectrum != null ? m_Spectrum.bandCount : 0;
+            var bands = m_Spectrum ? SpectrumEffect.bandCount : 0;
 
             GUILayout.Label(m_HasSpectrum
-                ? $"Spectrum, {m_Spectrum.lowestHz:0} Hz to {m_Spectrum.highestHz / 1000f:0.#} kHz:"
+                ? $"Spectrum, {SpectrumEffect.lowestHz:0} Hz to {SpectrumEffect.highestHz / 1000f:0.#} kHz:"
                 : "Spectrum: (not running)");
 
             var rect = GUILayoutUtility.GetRect(1f, 58f, GUILayout.ExpandWidth(true));
@@ -486,7 +487,7 @@ namespace RadioEffectRack
         {
             foreach (var effect in m_Effects)
             {
-                if (effect != null)
+                if (effect)
                     Destroy(effect);
             }
 
@@ -539,14 +540,14 @@ namespace RadioEffectRack
 
             for (var i = first; i < m_Effects.Count; i++)
             {
-                if (m_Effects[i] != null)
+                if (m_Effects[i])
                     Destroy(m_Effects[i]);
             }
 
             // Forget the tail now, rebuild once the destroys land.
             m_Effects.RemoveRange(first, m_Effects.Count - first);
 
-            if (m_Spectrum != null && !m_Effects.Contains(m_Spectrum))
+            if (m_Spectrum && !m_Effects.Contains(m_Spectrum))
             {
                 m_Spectrum = null;
                 m_HasSpectrum = false;

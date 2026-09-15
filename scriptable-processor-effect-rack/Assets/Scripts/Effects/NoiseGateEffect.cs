@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace RadioEffectRack
     /// Silences the signal between phrases, the way a squelch circuit does. An envelope follower tracks
     /// the loudest channel, and the gate opens while that envelope sits above the threshold.
     ///
-    /// This effect is the example of data travelling the other way: the audio thread posts the envelope
+    /// This effect is the example of data traveling the other way: the audio thread posts the envelope
     /// to the control side over the pipe, and the control side hands it back to the UI when asked.
     /// </summary>
     [BurstCompile(CompileSynchronously = true)]
@@ -25,7 +26,7 @@ namespace RadioEffectRack
         }
 
         /// <summary>The same settings converted for the audio thread. Sent over the pipe.</summary>
-        internal struct Tuning
+        struct Tuning
         {
             internal float threshold;
             internal float attack;
@@ -204,13 +205,16 @@ namespace RadioEffectRack
     public class NoiseGateEffect : MonoBehaviour, IAudioEffect
     {
         [Tooltip("The gate opens while the signal sits above this level.")]
-        [Range(-60f, 0f)] public float thresholdDb = -34f;
+        [Range(-60f, 0f)]
+        public float thresholdDb = -34f;
 
         [Tooltip("How fast the gate opens.")]
-        [Range(0.5f, 50f)] public float attackMs = 3f;
+        [Range(0.5f, 50f)]
+        public float attackMs = 3f;
 
         [Tooltip("How fast the gate closes again.")]
-        [Range(10f, 500f)] public float releaseMs = 140f;
+        [Range(10f, 500f)]
+        public float releaseMs = 140f;
 
         AudioSource m_Source;
         NoiseGateProcessor.Settings m_Sent;
@@ -218,7 +222,7 @@ namespace RadioEffectRack
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
         {
-            // Both spelled out together: see HissEffect for why setting one alone turns the other off.
+            // Both assigned together: see HissEffect for why assigning one alone disables the other.
             // Realtime every mix cycle, because that is where the envelope is posted.
             creationParameters.realtimeUpdateSetting = UpdateSetting.UpdateAlways;
             creationParameters.controlUpdateSetting = UpdateSetting.UpdateIfDataIsAvailable;

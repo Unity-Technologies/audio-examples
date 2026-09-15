@@ -1,9 +1,11 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Audio;
 using static UnityEngine.Audio.ProcessorInstance;
+using Random = UnityEngine.Random;
 
 namespace RadioEffectRack
 {
@@ -19,7 +21,7 @@ namespace RadioEffectRack
     {
         // Sized for the widest speaker layout, so a device change cannot outgrow it. AudioSpeakerMode
         // tops out at 7.1.
-        internal const int k_MaxChannels = 8;
+        const int k_MaxChannels = 8;
 
         /// <summary>Static level, linear. Sent from the component and forwarded over the pipe.</summary>
         internal struct Level
@@ -28,22 +30,22 @@ namespace RadioEffectRack
         }
 
         GeneratorInstance m_Noise;
-        internal NativeArray<float> m_Scratch;
-        internal float m_Level;
+        internal NativeArray<float> scratch;
+        internal float level;
 
         internal HissProcessor(GeneratorInstance noise, float level)
         {
             m_Noise = noise;
-            m_Scratch = default;
-            m_Level = level;
-        }
+            scratch = default;
+            this.level = level;
+        } 
 
         public void Update(UpdatedDataContext context, Pipe pipe)
         {
             foreach (var element in pipe.GetAvailableData(context))
             {
-                if (element.TryGetData(out Level level))
-                    m_Level = level.level;
+                if (element.TryGetData(out Level data))
+                    level = data.level;
             }
         }
 
@@ -54,7 +56,7 @@ namespace RadioEffectRack
 
             // If the host asks for more than Configure sized for, pass through: nothing on the audio thread
             // may allocate, and every output sample still has to be written.
-            if (!m_Scratch.IsCreated || m_Scratch.Length < sampleCount)
+            if (!scratch.IsCreated || scratch.Length < sampleCount)
             {
                 for (var channel = 0; channel < inputBuffer.channelCount; channel++)
                 {
@@ -68,8 +70,8 @@ namespace RadioEffectRack
             }
 
             // A nested processor runs when its owner runs it, from inside the owner's Process.
-            var scratch = new ChannelBuffer(m_Scratch.AsSpan().Slice(0, sampleCount), inputBuffer.channelCount);
-            var written = context.Process(m_Noise, scratch, default).processedFrames;
+            var scratchBuffer = new ChannelBuffer(scratch.AsSpan()[..sampleCount], inputBuffer.channelCount);
+            var written = context.Process(m_Noise, scratchBuffer, default).processedFrames;
 
             for (var channel = 0; channel < inputBuffer.channelCount; channel++)
             {
@@ -77,9 +79,9 @@ namespace RadioEffectRack
                 {
                     // Read before writing: input and output can be the same memory.
                     var input = inputBuffer[channel, frame];
-                    var noise = frame < written ? scratch[channel, frame] : 0f;
+                    var noise = frame < written ? scratchBuffer[channel, frame] : 0f;
 
-                    outputBuffer[channel, frame] = input + noise * m_Level;
+                    outputBuffer[channel, frame] = input + noise * level;
                 }
             }
 
@@ -105,13 +107,13 @@ namespace RadioEffectRack
                 // Control side, realtime suspended: the place to allocate.
                 var sampleCount = configuration.dspBufferSize * k_MaxChannels;
 
-                if (processor.m_Scratch.IsCreated && processor.m_Scratch.Length != sampleCount)
-                    processor.m_Scratch.Dispose();
+                if (processor.scratch.IsCreated && processor.scratch.Length != sampleCount)
+                    processor.scratch.Dispose();
 
-                if (!processor.m_Scratch.IsCreated)
-                    processor.m_Scratch = new NativeArray<float>(sampleCount, Allocator.Persistent);
+                if (!processor.scratch.IsCreated)
+                    processor.scratch = new NativeArray<float>(sampleCount, Allocator.Persistent);
 
-                processor.m_Level = m_Level;
+                processor.level = m_Level;
 
                 // A child may only be reconfigured during a system-wide reconfiguration, which is the case that
                 // matters: a new output device. Not so on the Configure that runs at creation, where the child
@@ -126,13 +128,13 @@ namespace RadioEffectRack
                 // The nested generator and the scratch buffer both belong to this effect.
                 context.Destroy(m_Noise);
 
-                if (processor.m_Scratch.IsCreated)
-                    processor.m_Scratch.Dispose();
+                if (processor.scratch.IsCreated)
+                    processor.scratch.Dispose();
             }
 
             public void Update(ControlContext context, Pipe pipe)
             {
-                // Nothing updates a nested processor on its own. Hence UpdateSetting.UpdateAlways.
+                // Nothing updates a nested processor on its own. Hence, UpdateSetting.UpdateAlways.
                 context.Update(m_Noise);
             }
 
@@ -154,7 +156,8 @@ namespace RadioEffectRack
     public class HissEffect : MonoBehaviour, IAudioEffect
     {
         [Tooltip("Level of the static bed, in dB.")]
-        [Range(-80f, -12f)] public float levelDb = -44f;
+        [Range(-80f, -12f)]
+        public float levelDb = -44f;
 
         AudioSource m_Source;
         float m_SentLevelDb;
@@ -162,21 +165,23 @@ namespace RadioEffectRack
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
         {
-            // A child is created with the format it will be rendered at: the owner's when nested, otherwise
-            // the system configuration. CreateInstance only ever runs on the main thread, so the
-            // configuration and the seed are read here rather than cached, and cannot go stale when the
-            // output device changes between one instance and the next.
+            // A child is created with the format it will be rendered at:
+            // the owner's when nested, otherwise the system configuration.
             var format = nestedFormat ?? new AudioFormat(AudioSettings.GetConfiguration());
             var level = DecibelToLinear(levelDb);
-            var seed = (uint)UnityEngine.Random.Range(1, int.MaxValue);
+            var seed = (uint)Random.Range(1, int.MaxValue);
 
             var noise = context.AllocateGenerator(new WhiteNoiseGenerator(seed),
                 new WhiteNoiseGenerator.Control(), format);
 
-            // CreationParameters is one flags word, and the defaults are only substituted when the whole
-            // word is unset. Setting one side turns the other off, so always spell out both.
-            // Control every tick, because that is where the nested generator is updated. Realtime only when
-            // a parameter arrives.
+            // Assign both update settings, even where one of them is UpdateSetting.Default's documented
+            // behavior. The two are not independent: the default is only applied when neither has been
+            // assigned, so assigning just one leaves the other with no update behavior at all and its
+            // Update is never called. Nothing warns when that happens, so assign both in your own
+            // effects too. This is a known issue and will be fixed later.
+            //
+            // Control updates every tick, because that is where the nested generator is updated.
+            // Realtime updates only when a parameter arrives.
             creationParameters.controlUpdateSetting = UpdateSetting.UpdateAlways;
             creationParameters.realtimeUpdateSetting = UpdateSetting.UpdateIfDataIsAvailable;
 
