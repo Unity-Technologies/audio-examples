@@ -297,6 +297,9 @@ namespace RadioEffectRack
         /// <summary>Reads the newest levels out of the running effect. False when it isn't running.</summary>
         public bool TryReadLevels()
         {
+            if (!m_Source.isPlaying)
+                return false;
+
             var instance = m_Source.GetEffectInstance(this);
 
             if (!ControlContext.builtIn.Exists(instance))

@@ -243,6 +243,9 @@ namespace RadioEffectRack
             envelopeDb = k_SilenceDb;
             isOpen = false;
 
+            if (!m_Source.isPlaying)
+                return false;
+
             var instance = m_Source.GetEffectInstance(this);
 
             if (!ControlContext.builtIn.Exists(instance))
