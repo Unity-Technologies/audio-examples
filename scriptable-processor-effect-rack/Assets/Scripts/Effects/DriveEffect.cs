@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Mathematics;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace RadioEffectRack
     ///
     /// The clipper normalizes its own peak, but clipping raises the average level far more than the
     /// peak, so a driven signal still sounds much louder. The output trim is what makes it possible to
-    /// match levels while dialling the drive around.
+    /// match levels while dialing the drive around.
     /// </summary>
     [BurstCompile(CompileSynchronously = true)]
     struct DriveProcessor : EffectInstance.IRealtime
@@ -108,10 +109,12 @@ namespace RadioEffectRack
     public class DriveEffect : MonoBehaviour, IAudioEffect
     {
         [Tooltip("Pre-gain into the soft clipper. Higher values sound more crushed.")]
-        [Range(1f, 40f)] public float drive = 9f;
+        [Range(1f, 40f)]
+        public float drive = 9f;
 
         [Tooltip("Gain applied after the clipper, in dB. Use it to match levels as you change the drive.")]
-        [Range(-40f, 6f)] public float outputDb;
+        [Range(-40f, 6f)]
+        public float outputDb;
 
         AudioSource m_Source;
         float m_SentDrive;

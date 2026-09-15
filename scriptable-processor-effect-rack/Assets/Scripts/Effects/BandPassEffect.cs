@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -20,7 +21,7 @@ namespace RadioEffectRack
     {
         // AudioSpeakerMode tops out at 7.1. Sized for the widest layout, so a device change to more
         // channels never needs a bigger allocation.
-        internal const int k_MaxChannels = 8;
+        const int k_MaxChannels = 8;
 
         /// <summary>Cutoffs in Hz. Sent from the component with ControlContext.SendMessage.</summary>
         internal struct Cutoffs
@@ -39,23 +40,23 @@ namespace RadioEffectRack
         /// One-pole coefficients, which is what the audio thread actually needs. Sent over the pipe by
         /// the control part, so the conversion from Hz never happens in Process.
         /// </summary>
-        internal struct Coefficients
+        struct Coefficients
         {
             internal float lowPass;
             internal float highPass;
         }
 
         Coefficients m_Coefficients;
-        internal NativeArray<float> m_LowPassState;
-        internal NativeArray<float> m_HighPassState;
+        internal NativeArray<float> lowPassState;
+        internal NativeArray<float> highPassState;
 
         /// <summary>Zeroes the filter memory. Called from Configure, where the realtime part is idle.</summary>
         internal void ClearState()
         {
-            for (var channel = 0; channel < m_LowPassState.Length; channel++)
+            for (var channel = 0; channel < lowPassState.Length; channel++)
             {
-                m_LowPassState[channel] = 0f;
-                m_HighPassState[channel] = 0f;
+                lowPassState[channel] = 0f;
+                highPassState[channel] = 0f;
             }
         }
 
@@ -72,15 +73,15 @@ namespace RadioEffectRack
             ChannelBuffer outputBuffer, EffectInstance.Arguments args)
         {
             // Configure allocates the state, so this only guards the gap before the first Configure.
-            var filteredChannels = m_LowPassState.IsCreated
+            var filteredChannels = lowPassState.IsCreated
                 ? math.min(inputBuffer.channelCount, k_MaxChannels)
                 : 0;
 
             for (var channel = 0; channel < filteredChannels; channel++)
             {
                 // Into locals, so the inner loop stays in registers.
-                var lowPass = m_LowPassState[channel];
-                var highPass = m_HighPassState[channel];
+                var lowPass = lowPassState[channel];
+                var highPass = highPassState[channel];
 
                 for (var frame = 0; frame < inputBuffer.frameCount; frame++)
                 {
@@ -94,8 +95,8 @@ namespace RadioEffectRack
                     outputBuffer[channel, frame] = lowPass - highPass;
                 }
 
-                m_LowPassState[channel] = lowPass;
-                m_HighPassState[channel] = highPass;
+                lowPassState[channel] = lowPass;
+                highPassState[channel] = highPass;
             }
 
             // Channels past the state pass through. The output buffer starts undefined, so write every
@@ -133,11 +134,11 @@ namespace RadioEffectRack
                 // to allocate. Everywhere else the values travel over the pipe.
                 processor.m_Coefficients = ComputeCoefficients();
 
-                if (!processor.m_LowPassState.IsCreated)
+                if (!processor.lowPassState.IsCreated)
                 {
                     // Already zeroed.
-                    processor.m_LowPassState = new NativeArray<float>(k_MaxChannels, Allocator.Persistent);
-                    processor.m_HighPassState = new NativeArray<float>(k_MaxChannels, Allocator.Persistent);
+                    processor.lowPassState = new NativeArray<float>(k_MaxChannels, Allocator.Persistent);
+                    processor.highPassState = new NativeArray<float>(k_MaxChannels, Allocator.Persistent);
                 }
                 else
                 {
@@ -148,11 +149,11 @@ namespace RadioEffectRack
 
             public void Dispose(ControlContext context, ref BandPassProcessor processor)
             {
-                if (processor.m_LowPassState.IsCreated)
-                    processor.m_LowPassState.Dispose();
+                if (processor.lowPassState.IsCreated)
+                    processor.lowPassState.Dispose();
 
-                if (processor.m_HighPassState.IsCreated)
-                    processor.m_HighPassState.Dispose();
+                if (processor.highPassState.IsCreated)
+                    processor.highPassState.Dispose();
             }
 
             public void Update(ControlContext context, Pipe pipe) { }
@@ -201,10 +202,12 @@ namespace RadioEffectRack
     public class BandPassEffect : MonoBehaviour, IAudioEffect
     {
         [Tooltip("Everything below this rolls off.")]
-        [Range(50f, 2000f)] public float lowCutHz = 400f;
+        [Range(50f, 2000f)]
+        public float lowCutHz = 400f;
 
         [Tooltip("Everything above this rolls off.")]
-        [Range(800f, 8000f)] public float highCutHz = 2600f;
+        [Range(800f, 8000f)]
+        public float highCutHz = 2600f;
 
         AudioSource m_Source;
         float m_SentLowCutHz;

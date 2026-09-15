@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -16,7 +17,7 @@ namespace RadioEffectRack
     /// it rides the pipe as one message per mix block and the audio thread and the UI share no memory.
     ///
     /// The filters need to be selective to be worth drawing. A pair of one-poles, as BandPassEffect
-    /// uses to shape audio, only rejects about 6 dB two octaves from its centre, so every band would
+    /// uses to shape audio, only rejects about 6 dB two octaves from its center, so every band would
     /// mostly report the overall level. These reject about 22 dB, which is enough to see a spectrum.
     ///
     /// It is an ordinary effect component, so where it sits in the chain decides what it measures.
@@ -53,7 +54,7 @@ namespace RadioEffectRack
         }
 
         /// <summary>One reading of every band, posted once per mix block.</summary>
-        internal struct Reading
+        struct Reading
         {
             internal float4x4 levels;
         }
@@ -68,7 +69,7 @@ namespace RadioEffectRack
             internal bool hasLevels;
         }
 
-        internal NativeArray<Band> m_Bands;
+        internal NativeArray<Band> bands;
         float m_AttackCoefficient;
         float m_ReleaseCoefficient;
         Reading m_Reading;
@@ -82,7 +83,7 @@ namespace RadioEffectRack
         public EffectInstance.Result Process(in RealtimeContext context, ChannelBuffer inputBuffer,
             ChannelBuffer outputBuffer, EffectInstance.Arguments args)
         {
-            if (!m_Bands.IsCreated)
+            if (!bands.IsCreated)
             {
                 // Guards the gap before the first Configure.
                 for (var channel = 0; channel < inputBuffer.channelCount; channel++)
@@ -116,7 +117,7 @@ namespace RadioEffectRack
 
                 for (var index = 0; index < k_BandCount; index++)
                 {
-                    var band = m_Bands[index];
+                    var band = bands[index];
 
                     // One filter step. v1 is the band-pass output, peaking at Q, so scale it back before measuring.
                     var v3 = mono - band.ic2eq;
@@ -131,7 +132,7 @@ namespace RadioEffectRack
 
                     band.envelope += coefficient * (magnitude - band.envelope);
 
-                    m_Bands[index] = band;
+                    bands[index] = band;
                 }
             }
 
@@ -142,10 +143,10 @@ namespace RadioEffectRack
 
         /// <summary>Four band envelopes, so a whole column packs into one matrix.</summary>
         float4 Group(int first) => new float4(
-            m_Bands[first].envelope,
-            m_Bands[first + 1].envelope,
-            m_Bands[first + 2].envelope,
-            m_Bands[first + 3].envelope);
+            bands[first].envelope,
+            bands[first + 1].envelope,
+            bands[first + 2].envelope,
+            bands[first + 3].envelope);
 
         internal struct Control : EffectInstance.IControl<SpectrumProcessor>
         {
@@ -157,8 +158,8 @@ namespace RadioEffectRack
             {
                 setup = default;
 
-                if (!processor.m_Bands.IsCreated)
-                    processor.m_Bands = new NativeArray<Band>(k_BandCount, Allocator.Persistent);
+                if (!processor.bands.IsCreated)
+                    processor.bands = new NativeArray<Band>(k_BandCount, Allocator.Persistent);
 
                 // Log spaced. The coefficients depend on the sample rate, so the bank is rebuilt here and its
                 // state cleared: the old memory belongs to the old rate.
@@ -169,7 +170,7 @@ namespace RadioEffectRack
                 {
                     var centre = k_LowestHz * math.pow(2f, octaves * index / (k_BandCount - 1f));
 
-                    processor.m_Bands[index] = Coefficients(centre, sampleRate);
+                    processor.bands[index] = Coefficients(centre, sampleRate);
                 }
 
                 processor.m_AttackCoefficient = TimeConstant(k_AttackMs, sampleRate);
@@ -178,8 +179,8 @@ namespace RadioEffectRack
 
             public void Dispose(ControlContext context, ref SpectrumProcessor processor)
             {
-                if (processor.m_Bands.IsCreated)
-                    processor.m_Bands.Dispose();
+                if (processor.bands.IsCreated)
+                    processor.bands.Dispose();
             }
 
             public void Update(ControlContext context, Pipe pipe)
@@ -219,14 +220,14 @@ namespace RadioEffectRack
             }
 
             /// <summary>
-            /// Prewarped coefficients for one band, with its integrator state left at zero.
+            /// Pre-warped coefficients for one band, with its integrator state left at zero.
             /// </summary>
             static Band Coefficients(float centreHz, int sampleRate)
             {
                 if (sampleRate <= 0)
                     return default;
 
-                // Clear of Nyquist, where the prewarping runs away.
+                // Clear of Nyquist, where the pre-warping runs away.
                 var centre = math.min(centreHz, sampleRate * 0.45f);
                 var g = math.tan(math.PI * centre / sampleRate);
                 var a1 = 1f / (1f + g * (g + k_Damping));
@@ -261,13 +262,13 @@ namespace RadioEffectRack
         float4x4 m_Levels;
 
         /// <summary>How many bands a reading holds, lowest first.</summary>
-        public int bandCount => SpectrumProcessor.k_BandCount;
+        public static int bandCount => SpectrumProcessor.k_BandCount;
 
-        /// <summary>Centre frequency of the lowest band.</summary>
-        public float lowestHz => SpectrumProcessor.k_LowestHz;
+        /// <summary>Center frequency of the lowest band.</summary>
+        public static float lowestHz => SpectrumProcessor.k_LowestHz;
 
-        /// <summary>Centre frequency of the highest band.</summary>
-        public float highestHz => SpectrumProcessor.k_HighestHz;
+        /// <summary>Center frequency of the highest band.</summary>
+        public static float highestHz => SpectrumProcessor.k_HighestHz;
 
         /// <summary>The level of one band from the last read, lowest band first.</summary>
         public float Level(int band)
@@ -282,7 +283,7 @@ namespace RadioEffectRack
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
         {
-            // Both spelled out together: see HissEffect for why setting one alone turns the other off.
+            // Both assigned together: see HissEffect for why assigning one alone disables the other.
             creationParameters.realtimeUpdateSetting = UpdateSetting.UpdateAlways;
             creationParameters.controlUpdateSetting = UpdateSetting.UpdateIfDataIsAvailable;
 
