@@ -85,6 +85,8 @@ namespace RadioEffectRack
         SpectrumEffect m_Spectrum;
         bool m_HasSpectrum;
 
+        Vector2 m_Scroll;
+
         void Start()
         {
             m_Source = GetComponent<AudioSource>();
@@ -178,6 +180,9 @@ namespace RadioEffectRack
             var height = Mathf.Min(k_PanelHeight, Screen.height - 2f * k_PanelMargin);
 
             GUILayout.BeginArea(new Rect(k_PanelMargin, k_PanelMargin, width, height), GUI.skin.box);
+
+            // A full rack is taller than the panel, and the panel is capped by the screen.
+            m_Scroll = GUILayout.BeginScrollView(m_Scroll);
 
             var clip = m_Source.clip;
             GUILayout.Label(clip
@@ -299,6 +304,7 @@ namespace RadioEffectRack
                     pendingAddition = m_AddableTypes[addClicked];
             }
 
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
 
             // After the layout, so the set of controls cannot change mid-frame. The audio source
