@@ -206,7 +206,12 @@ namespace RadioEffectRack
 
             m_Source.bypassEffects = GUILayout.Toggle(m_Source.bypassEffects, "Bypass Effects (hear the dry clip)");
 
-            GUILayout.Space(6);
+            GUILayout.Space(15);
+            DrawDivider();
+            GUILayout.Label("Presets");
+            DrawDivider();
+
+            GUILayout.Space(10);
 
             var presetClicked = WrappedButtons(m_PresetLabels, k_ButtonWidth, k_ButtonsPerRow);
 
@@ -218,7 +223,13 @@ namespace RadioEffectRack
                     ClearRack();
             }
 
-            GUILayout.Space(6);
+            GUILayout.Space(15);
+            DrawDivider();
+            GUILayout.Label("Effects");
+            DrawDivider();
+
+            GUILayout.Space(10);
+
             GUILayout.Label(m_Effects.Count > 0
                 ? "Chain, in component order:"
                 : "The rack is empty, so the clip plays dry. Load a preset or add an effect below.");
@@ -363,6 +374,17 @@ namespace RadioEffectRack
             GUILayout.EndHorizontal();
 
             return action;
+        }
+
+        /// <summary>Draws a horizontal rule across the panel, to separate one section from the next.</summary>
+        static void DrawDivider()
+        {
+            var rect = GUILayoutUtility.GetRect(1f, 2f, GUILayout.ExpandWidth(true));
+
+            var previousColor = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, 0.3f);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.color = previousColor;
         }
 
         /// <summary>
