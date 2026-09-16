@@ -243,7 +243,7 @@ namespace RadioEffectRack
             envelopeDb = k_SilenceDb;
             isOpen = false;
 
-            if (!m_Source.isPlaying)
+            if (!m_Source.isPlaying || m_Source.bypassEffects)
                 return false;
 
             var instance = m_Source.GetEffectInstance(this);
