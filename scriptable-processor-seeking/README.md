@@ -10,7 +10,7 @@ The project targets Unity 6.7 and is built on the [Scriptable audio pipeline][ma
 
 Open the project in Unity 6.7, open `Assets/Scenes/Seeking.unity`, and enter Play Mode.
 
-The scene contains a single **Seek Tester** GameObject (a `SeekTester` plus a `ClipPlayerGenerator` with `Count1To10.wav` assigned) and a Main Camera that provides the `AudioListener`. A GUI panel appears in Play Mode:
+The scene contains a single **Seek Tester** GameObject (a `SeekTester`, a `ClipPlayerGenerator` with `Count1To10.wav` assigned, and an `AudioSource`) and a Main Camera that provides the `AudioListener`. A GUI panel appears in Play Mode:
 
 - Playback starts **stopped**. Use the **Play/Stop** button.
 - Pick **when** a seek should fire (the clip second at which it triggers) with the slider, then click a **number button** to enqueue "when the clip reaches that second, jump so I hear number N".
