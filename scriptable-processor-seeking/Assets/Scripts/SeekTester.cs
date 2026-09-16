@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.Audio;
 
 /// <summary>
-/// Manual seek playground. Drag onto a GameObject (auto-adds <see cref="ClipPlayerGenerator"/>),
-/// assign a clip on that component, enter Play mode.
+/// Manual seek playground. Drag onto a GameObject (auto-adds <see cref="ClipPlayerGenerator"/> and an
+/// <see cref="AudioSource"/>), assign a clip on that component, enter Play mode.
 ///
 /// - Starts STOPPED. Use the Play/Stop button.
 /// - Build up a queue of seeks: pick "when" (the clip second at which the seek fires) with the slider,
@@ -20,6 +20,7 @@ using UnityEngine.Audio;
 /// Requires an AudioListener in the scene (Main Camera has one by default).
 /// </summary>
 [RequireComponent(typeof(ClipPlayerGenerator))]
+[RequireComponent(typeof(AudioSource))]
 public class SeekTester : MonoBehaviour
 {
     struct StagedSeek
@@ -41,12 +42,7 @@ public class SeekTester : MonoBehaviour
     void Start()
     {
         m_Generator = GetComponent<ClipPlayerGenerator>();
-
-        // No explicit LoadAudioData() here: the sample provider backend honors the clip's own import
-        // settings (load type, preload, load in background) and loads it as part of CreateInstance.
         m_Source = GetComponent<AudioSource>();
-        if (m_Source == null)
-            m_Source = gameObject.AddComponent<AudioSource>();
 
         m_Source.playOnAwake = false;
         m_Source.spatialBlend = 0f;          // 2D so it's audible without positioning
