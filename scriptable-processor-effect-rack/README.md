@@ -17,7 +17,7 @@ The project targets Unity 6.7 and is built on the [scriptable audio pipeline][ma
 
 Open the project in Unity 6.7, open `Assets/Scenes/EffectRack.unity`, and enter Play Mode.
 
-The scene contains a single **Radio** GameObject holding an `AudioSource` with `Count1To10.wav` and the `EffectRack` panel, plus a camera that provides the `AudioListener`. The rack starts empty and the clip plays dry until you build one. A GUI panel appears in the top left:
+The scene contains a single **Radio** GameObject holding an `AudioSource` with `Count1To10.wav` and the `EffectRack` panel, plus a camera that provides the `AudioListener`. The rack starts empty and the clip plays dry until you build one. A GUI panel appears:
 
 - Playback starts **stopped**. Use the **Play/Stop** button. The clip loops by default.
 - **Bypass Effects** takes every effect out at once, which is the quickest way to hear the dry clip.
