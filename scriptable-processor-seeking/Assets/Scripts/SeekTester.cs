@@ -39,6 +39,7 @@ public class SeekTester : MonoBehaviour
     int m_WhenSecond;            // slider value
     bool m_Immediate;           // send with immediate 'when'
     bool m_FlushRequested;      // deliver the queue once the generator instance is live
+    Vector2 m_Scroll;           // panel scroll offset, used when the view is shorter than the panel
 
     void Start()
     {
@@ -107,7 +108,8 @@ public class SeekTester : MonoBehaviour
     // Panel size, and the x that centers it in the game view.
     const float k_PanelWidth = 340f;
     const float k_PanelHeight = 620f;
-    static float PanelX(float width) => Mathf.Max(10f, (Screen.width - width) * 0.5f);
+    const float k_PanelMargin = 10f;
+    static float PanelX(float width) => Mathf.Max(k_PanelMargin, (Screen.width - width) * 0.5f);
 
     void OnGUI()
     {
@@ -121,7 +123,12 @@ public class SeekTester : MonoBehaviour
 
         var maxSec = Mathf.Max(1, Mathf.CeilToInt(clip.length));
 
-        GUILayout.BeginArea(new Rect(PanelX(k_PanelWidth), 10, k_PanelWidth, k_PanelHeight), GUI.skin.box);
+        // Shrink to the view when it is too short for the whole panel; the scroll view below then
+        // gives the contents somewhere to go instead of being clipped off the bottom.
+        var panelHeight = Mathf.Min(k_PanelHeight, Screen.height - 2f * k_PanelMargin);
+
+        GUILayout.BeginArea(new Rect(PanelX(k_PanelWidth), k_PanelMargin, k_PanelWidth, panelHeight), GUI.skin.box);
+        m_Scroll = GUILayout.BeginScrollView(m_Scroll);
 
         GUILayout.Label($"Clip: {clip.name}  ({clip.length:0.0}s @ {clip.frequency} Hz)");
         GUILayout.Label($"Playing: {m_Source.isPlaying}");
@@ -205,6 +212,7 @@ public class SeekTester : MonoBehaviour
         if (m_Queued.Count > 0 && GUILayout.Button("Clear queue"))
             m_Queued.Clear();
 
+        GUILayout.EndScrollView();
         GUILayout.EndArea();
     }
 }
