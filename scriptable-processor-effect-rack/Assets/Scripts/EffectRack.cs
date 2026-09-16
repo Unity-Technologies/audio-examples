@@ -106,8 +106,13 @@ namespace RadioEffectRack
 
             foreach (var effect in m_Effects)
             {
-                if (effect && effect is NoiseGateEffect gate)
-                    m_HasEnvelope = gate.TryGetEnvelope(out m_EnvelopeDb, out m_GateIsOpen);
+                if (effect && effect is NoiseGateEffect gate
+                    && gate.TryGetEnvelope(out m_EnvelopeDb, out m_GateIsOpen))
+                {
+                    m_HasEnvelope = true;
+
+                    break;
+                }
             }
 
             m_HasSpectrum = m_Spectrum && m_Spectrum.TryReadLevels();
@@ -534,8 +539,11 @@ namespace RadioEffectRack
             {
                 var build = Capture(effect);
 
-                if (build != null)
-                    builders.Add(build);
+                // Destroying an effect Capture cannot rebuild would drop it from the chain.
+                if (build == null)
+                    return;
+
+                builders.Add(build);
             }
 
             for (var i = first; i < m_Effects.Count; i++)
