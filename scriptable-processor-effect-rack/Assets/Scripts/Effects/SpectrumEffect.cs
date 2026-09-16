@@ -297,7 +297,8 @@ namespace RadioEffectRack
         /// <summary>Reads the newest levels out of the running effect. False when it isn't running.</summary>
         public bool TryReadLevels()
         {
-            if (!enabled || !m_Source.isPlaying || m_Source.bypassEffects)
+            if (!enabled || !m_Source.isPlaying || m_Source.bypassEffects
+                || (AudioListener.pause && !m_Source.ignoreListenerPause))
                 return false;
 
             var instance = m_Source.GetEffectInstance(this);
