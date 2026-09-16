@@ -101,18 +101,23 @@ public class SeekTester : MonoBehaviour
         }
     }
 
+    // Panel size, and the x that centers it in the game view.
+    const float k_PanelWidth = 340f;
+    const float k_PanelHeight = 620f;
+    static float PanelX(float width) => Mathf.Max(10f, (Screen.width - width) * 0.5f);
+
     void OnGUI()
     {
         var clip = m_Generator != null ? m_Generator.clip : null;
         if (clip == null)
         {
-            GUI.Label(new Rect(10, 10, 460, 20), "Assign a clip on the ClipPlayerGenerator component.");
+            GUI.Label(new Rect(PanelX(460f), 10, 460, 20), "Assign a clip on the ClipPlayerGenerator component.");
             return;
         }
 
         int maxSec = Mathf.Max(1, Mathf.CeilToInt(clip.length));
 
-        GUILayout.BeginArea(new Rect(10, 10, 340, 620), GUI.skin.box);
+        GUILayout.BeginArea(new Rect(PanelX(k_PanelWidth), 10, k_PanelWidth, k_PanelHeight), GUI.skin.box);
 
         GUILayout.Label($"Clip: {clip.name}  ({clip.length:0.0}s @ {clip.frequency} Hz)");
         GUILayout.Label($"Playing: {m_Source.isPlaying}");
