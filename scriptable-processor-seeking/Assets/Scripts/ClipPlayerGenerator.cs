@@ -34,7 +34,8 @@ struct ClipPlayerRealtime : GeneratorInstance.IRealtime
     internal GeneratorInstance nested;
     internal bool nestedValid;
 
-    // Latched so the control side is told exactly once, however many times Process runs afterwards.
+    // Latched so the control side is told exactly once per completion, however many times Process runs
+    // afterwards. Cleared if the clip plays on again, so a later completion is reported too.
     internal bool reportedFinished;
 
     // Mirrors of the clip's own metadata, resolved on the managed side at creation.
@@ -62,7 +63,13 @@ struct ClipPlayerRealtime : GeneratorInstance.IRealtime
 
         var result = context.Process(nested, buffer, args);
 
-        if (result.isFinished() && !reportedFinished)
+        if (!result.isFinished())
+        {
+            // Playing again (a seek moved the position back before the end), so arm the latch: the
+            // next completion is a new one and gets its own report.
+            reportedFinished = false;
+        }
+        else if (!reportedFinished)
         {
             reportedFinished = true;
             pipe.SendData(context, new ClipFinishedEvent());
@@ -105,7 +112,10 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
             var clip = (IAudioGenerator)m_ClipHandle.Target;
 
             m_Nested = clip.CreateInstance(context, format, default(GeneratorInstance.CreationParameters));
-            m_NestedCreated = true;
+
+            // Creation can fail and hand back an invalid instance; only claim it if it really exists,
+            // so the fallbacks below are reachable instead of driving a dead instance.
+            m_NestedCreated = context.Exists(m_Nested);
         }
         else
         {
@@ -160,9 +170,15 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
 
     public void Dispose(ControlContext context, ref ClipPlayerRealtime realtime)
     {
+        // Clear the realtime side's view first: it must not keep a valid-looking handle to an instance
+        // that is about to be destroyed.
+        realtime.nested = default;
+        realtime.nestedValid = false;
+
         if (m_NestedCreated)
         {
             context.Destroy(m_Nested);
+            m_Nested = default;
             m_NestedCreated = false;
         }
 
@@ -199,7 +215,7 @@ public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
     public DiscreteTime? length => clip != null ? ((IAudioGenerator)clip).length : null;
 
     // Called by the audio system when the AudioSource starts playing this generator.
-    public GeneratorInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat, GeneratorInstance.CreationParameters parameters)
+    public GeneratorInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat, GeneratorInstance.CreationParameters _)
     {
         if (clip == null)
         {
@@ -220,8 +236,9 @@ public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
             clipLength = clipLength ?? default
         };
 
-        // UpdateAlways so the control side pumps the nested instance every frame, rather than only when
-        // pipe data happens to be waiting.
+        // The caller's parameters are deliberately ignored: this wrapper needs UpdateAlways on both
+        // sides so the control side pumps the nested instance every frame, rather than only when pipe
+        // data happens to be waiting.
         var creationParameters = new GeneratorInstance.CreationParameters
         {
             controlUpdateSetting = ProcessorInstance.UpdateSetting.UpdateAlways,
