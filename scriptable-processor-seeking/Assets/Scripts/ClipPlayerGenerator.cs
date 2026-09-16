@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.IntegerTime;
@@ -35,7 +36,7 @@ struct ClipPlayerRealtime : GeneratorInstance.IRealtime
     internal bool nestedValid;
 
     // Latched so the control side is told exactly once per completion, however many times Process runs
-    // afterwards. Cleared if the clip plays on again, so a later completion is reported too.
+    // afterward. Cleared if the clip plays on again, so a later completion is reported too.
     internal bool reportedFinished;
 
     // Mirrors of the clip's own metadata, resolved on the managed side at creation.
@@ -143,7 +144,6 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
         if (m_NestedCreated && message.Is<SeekMessage>())
         {
             ref var seek = ref message.Get<SeekMessage>();
-
             return context.SendMessage(m_Nested, ref seek);
         }
 
@@ -157,7 +157,6 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
             if (element.TryGetData<ClipFinishedEvent>(out _))
             {
                 var state = (ClipPlaybackState)m_StateHandle.Target;
-
                 state.finished = true;
             }
         }
@@ -217,7 +216,7 @@ public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
     // Called by the audio system when the AudioSource starts playing this generator.
     public GeneratorInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat, GeneratorInstance.CreationParameters _)
     {
-        if (clip == null)
+        if (!clip)
         {
             Debug.LogError($"{nameof(ClipPlayerGenerator)}: no clip assigned.", this);
             return default;

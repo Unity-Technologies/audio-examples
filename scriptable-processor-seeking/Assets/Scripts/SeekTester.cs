@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.IntegerTime;
 using UnityEngine;
@@ -25,16 +26,16 @@ public class SeekTester : MonoBehaviour
 {
     struct StagedSeek
     {
-        public int destSecond;   // where to jump to (seconds into the clip)
-        public int whenSecond;   // clip position (second) at which the seek fires
-        public bool immediate;   // if true, fire at the next process block (ignore whenSecond)
-        public bool sent;        // delivered to the current generator instance this play session
+        internal int destSecond;   // where to jump to (seconds into the clip)
+        internal int whenSecond;   // clip position (second) at which the seek fires
+        internal bool immediate;   // if true, fire at the next process block (ignore whenSecond)
+        internal bool sent;        // delivered to the current generator instance this play session
     }
 
     ClipPlayerGenerator m_Generator;
     AudioSource m_Source;
 
-    readonly List<StagedSeek> m_Queued = new List<StagedSeek>();
+    readonly List<StagedSeek> m_Queued = new();
     int m_WhenSecond;            // slider value
     bool m_Immediate;           // send with immediate 'when'
     bool m_FlushRequested;      // deliver the queue once the generator instance is live
@@ -66,7 +67,8 @@ public class SeekTester : MonoBehaviour
         // isPlaying until something stops it explicitly, and the clip finishing is only visible on the
         // realtime thread -- so ClipPlayerGenerator relays it to the main thread for us.
         var state = m_Generator.playbackState;
-        if (state != null && state.finished && m_Source.isPlaying)
+        
+        if (state is { finished: true } && m_Source.isPlaying)
         {
             state.finished = false;
             m_Source.Stop();
@@ -81,15 +83,16 @@ public class SeekTester : MonoBehaviour
         // The sample provider fires each seek when playback reaches its 'when', and drops any seek
         // whose 'when' has already been passed. Sent entries are kept (and greyed in the UI) rather
         // than cleared, so the list stays visible; each is delivered once per play session.
-        for (int i = 0; i < m_Queued.Count; i++)
+        for (var i = 0; i < m_Queued.Count; i++)
         {
             var s = m_Queued[i];
+            
             if (s.sent)
                 continue;
 
-            var offset = new DiscreteTime(s.destSecond);   // DiscreteTime(int) is seconds
+            var offset = new DiscreteTime(s.destSecond); // DiscreteTime(int) is seconds
             var msg = s.immediate
-                ? new SeekMessage(offset)                              // when omitted = immediate
+                ? new SeekMessage(offset) // when omitted = immediate
                 : new SeekMessage(offset, new DiscreteTime(s.whenSecond));
 
             var response = ControlContext.builtIn.SendMessage(instance, ref msg);
@@ -108,14 +111,15 @@ public class SeekTester : MonoBehaviour
 
     void OnGUI()
     {
-        var clip = m_Generator != null ? m_Generator.clip : null;
-        if (clip == null)
+        var clip = m_Generator ? m_Generator.clip : null;
+        
+        if (!clip)
         {
             GUI.Label(new Rect(PanelX(460f), 10, 460, 20), "Assign a clip on the ClipPlayerGenerator component.");
             return;
         }
 
-        int maxSec = Mathf.Max(1, Mathf.CeilToInt(clip.length));
+        var maxSec = Mathf.Max(1, Mathf.CeilToInt(clip.length));
 
         GUILayout.BeginArea(new Rect(PanelX(k_PanelWidth), 10, k_PanelWidth, k_PanelHeight), GUI.skin.box);
 
@@ -132,7 +136,7 @@ public class SeekTester : MonoBehaviour
             else
             {
                 // Re-arm the whole list for the new instance so it re-sends and re-animates each Play.
-                for (int i = 0; i < m_Queued.Count; i++)
+                for (var i = 0; i < m_Queued.Count; i++)
                 {
                     var s = m_Queued[i];
                     s.sent = false;
@@ -160,16 +164,17 @@ public class SeekTester : MonoBehaviour
         // --- destination buttons (1-indexed to match the spoken numbers) ---
         GUILayout.Label("Enqueue: seek so I hear number");
         const int cols = 5;
-        for (int i = 0; i < maxSec; i++)
+        
+        for (var i = 0; i < maxSec; i++)
         {
             if (i % cols == 0) GUILayout.BeginHorizontal();
 
-            int number = i + 1;      // button label
-            int destSecond = i;      // number N is spoken at second (N-1)
+            var number = i + 1; // button label
 
             if (GUILayout.Button(number.ToString()))
             {
-                m_Queued.Add(new StagedSeek { destSecond = destSecond, whenSecond = m_WhenSecond, immediate = m_Immediate });
+                m_Queued.Add(new StagedSeek { destSecond = i, whenSecond = m_WhenSecond, immediate = m_Immediate });
+                
                 if (InstanceLive())
                     m_FlushRequested = true;   // playing already — schedule it now (still honors 'when')
             }
@@ -179,19 +184,20 @@ public class SeekTester : MonoBehaviour
 
         GUILayout.Space(8);
 
-        // --- queued list (kept visible; greyed once sent, dimmer once playback ends) ---
+        // --- Queued list (kept visible; greyed once sent, dimmer once playback ends) ---
         GUILayout.Label($"Queued ({m_Queued.Count}):");
         var prevContentColor = GUI.contentColor;
+        
         foreach (var s in m_Queued)
         {
             if (!s.sent)
-                GUI.contentColor = Color.white;                      // staged, not yet sent
+                GUI.contentColor = Color.white;                             // staged, not yet sent
             else if (m_Source.isPlaying)
-                GUI.contentColor = new Color(0.60f, 0.60f, 0.60f);   // sent to the playing instance
+                GUI.contentColor = new Color(0.60f, 0.60f, 0.60f);  // sent to the playing instance
             else
-                GUI.contentColor = new Color(0.40f, 0.40f, 0.40f);   // playback finished / stopped
+                GUI.contentColor = new Color(0.40f, 0.40f, 0.40f);  // playback finished / stopped
 
-            string state = !s.sent ? "" : (m_Source.isPlaying ? "  - sent" : "  - played");
+            var state = !s.sent ? "" : (m_Source.isPlaying ? "  - sent" : "  - played");
             GUILayout.Label($"   hear {s.destSecond + 1}  {(s.immediate ? "(immediate)" : $"@ clip {s.whenSecond}s")}{state}");
         }
         GUI.contentColor = prevContentColor;
