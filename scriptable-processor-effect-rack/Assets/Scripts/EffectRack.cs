@@ -52,7 +52,6 @@ namespace RadioEffectRack
         };
 
         const float k_PanelWidth = 440f;
-        const float k_PanelHeight = 760f;
         const float k_PanelMargin = 4f;
 
         // Three across. A fourth starts a new row rather than squeezing the labels.
@@ -175,13 +174,16 @@ namespace RadioEffectRack
             if (Event.current.type == EventType.Layout)
                 RefreshEffects();
 
-            // Fit the view rather than assume there is room, and sit off the corner.
+            // Fit the view rather than assume there is room, and centre what fits.
             var width = Mathf.Min(k_PanelWidth, Screen.width - 2f * k_PanelMargin);
-            var height = Mathf.Min(k_PanelHeight, Screen.height - 2f * k_PanelMargin);
+            var height = Mathf.Max(0f, Screen.height - 2f * k_PanelMargin);
 
-            GUILayout.BeginArea(new Rect(k_PanelMargin, k_PanelMargin, width, height), GUI.skin.box);
+            var rect = new Rect(0.5f * (Screen.width - width), 0.5f * (Screen.height - height),
+                width, height);
 
-            // A full rack is taller than the panel, and the panel is capped by the screen.
+            GUILayout.BeginArea(rect, GUI.skin.box);
+
+            // A full rack can be taller than the panel.
             m_Scroll = GUILayout.BeginScrollView(m_Scroll);
 
             var clip = m_Source.clip;
