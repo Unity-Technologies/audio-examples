@@ -188,7 +188,7 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
 
 /// <summary>
 /// Plays an <see cref="AudioClip"/> through the clip's own generator instance, so it supports
-/// seeking via <see cref="SeekMessage"/> (an <see cref="AudioClip"/> handles seeks out of the box).
+/// seeking via <see cref="SeekMessage"/> (a clip handles seeks out of the box).
 ///
 /// Rather than handing the clip's instance straight to the AudioSource, this wraps it, so the
 /// realtime side can see the clip finish and report it back to the main thread via

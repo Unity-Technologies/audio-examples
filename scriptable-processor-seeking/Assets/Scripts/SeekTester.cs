@@ -9,16 +9,17 @@ using UnityEngine.Audio;
 /// <see cref="AudioSource"/>), assign a clip on that component, enter Play mode.
 ///
 /// - Starts STOPPED. Use the Play/Stop button.
-/// - Build up a queue of seeks: pick "when" (the clip second at which the seek fires) with the slider,
+/// - Build up a queue of seeks: pick <c>when</c> (the clip second at which the seek fires) with the slider,
 ///   then click a number button to enqueue "when the clip reaches that second, jump to number N".
 /// - You can enqueue while stopped; the queue is delivered to the generator when you press Play, in
-///   staging order. The generator applies them in that order and never reorders them by "when", so a
+///   staging order. The generator applies them in that order and never reorders them by <c>when</c>, so a
 ///   seek that isn't due yet holds back the ones behind it.
 /// - The staged list stays on screen after Play: entries grey out once sent to the instance, and
 ///   dim further when playback ends. (The demo can't observe which seeks actually fire or are
 ///   dropped inside the generator, so it shows "sent" / "played", not per-seek firing -- watch the
 ///   console for the warning a dropped seek logs.)
-/// - Each seek is a SeekMessage(offset, when); `when` maps to sample-accurate scheduling.
+/// - Each seek is a <see cref="SeekMessage"/> carrying an offset and a <c>when</c>; <c>when</c> maps
+///   to sample-accurate scheduling.
 ///
 /// Requires an AudioListener in the scene (Main Camera has one by default).
 /// </summary>
@@ -51,7 +52,7 @@ public class SeekTester : MonoBehaviour
         m_Source.playOnAwake = false;
         m_Source.spatialBlend = 0f;          // 2D so it's audible without positioning
         m_Source.generator = m_Generator;    // play the clip through the wrapping generator
-        // Intentionally NOT playing here — starts stopped.
+        // Intentionally NOT playing here -- starts stopped.
     }
 
     bool InstanceLive()
@@ -187,7 +188,7 @@ public class SeekTester : MonoBehaviour
                 m_Queued.Add(new StagedSeek { destSecond = i, whenSecond = m_WhenSecond, immediate = m_Immediate });
                 
                 if (InstanceLive())
-                    m_FlushRequested = true;   // playing already — schedule it now (still honors 'when')
+                    m_FlushRequested = true;   // playing already -- schedule it now (still honors 'when')
             }
 
             if (i % cols == cols - 1 || i == maxSec - 1) GUILayout.EndHorizontal();
