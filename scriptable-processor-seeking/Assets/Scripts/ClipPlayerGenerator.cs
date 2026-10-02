@@ -107,9 +107,9 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
     {
         if (!m_NestedCreated)
         {
-            // Instantiating the clip produces the SampleProvider-backed generator instance -- the one
-            // that handles seeks. Created here rather than in Update so it exists before the first
-            // Process call, and before SeekTester can send anything.
+            // Instantiating the clip produces the AudioClip generator instance -- the one that handles
+            // seeks. Created here rather than in Update so it exists before the first Process call,
+            // and before SeekTester can send anything.
             var clip = (IAudioGenerator)m_ClipHandle.Target;
 
             m_Nested = clip.CreateInstance(context, format, default(GeneratorInstance.CreationParameters));
@@ -140,7 +140,7 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
         ProcessorInstance.Message message)
     {
         // The AudioSource's generatorInstance is now this wrapper, so seeks land here. Pass them down to
-        // the sample provider, which is what actually implements seeking.
+        // the clip's own instance, which is what actually implements seeking.
         if (m_NestedCreated && message.Is<SeekMessage>())
         {
             ref var seek = ref message.Get<SeekMessage>();
@@ -187,8 +187,8 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
 }
 
 /// <summary>
-/// Plays an <see cref="AudioClip"/> through the SampleProvider generator path, so it supports
-/// seeking via <see cref="SeekMessage"/> (that path is the one that handles seeks).
+/// Plays an <see cref="AudioClip"/> through the clip's own generator instance, so it supports
+/// seeking via <see cref="SeekMessage"/> (an <see cref="AudioClip"/> handles seeks out of the box).
 ///
 /// Rather than handing the clip's instance straight to the AudioSource, this wraps it, so the
 /// realtime side can see the clip finish and report it back to the main thread via
@@ -199,7 +199,7 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
 /// </summary>
 public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
 {
-    [Tooltip("The clip to play through the sample provider (e.g. your 10s counting file).")]
+    [Tooltip("The clip to play (e.g. your 10s counting file).")]
     public AudioClip clip;
 
     /// <summary>

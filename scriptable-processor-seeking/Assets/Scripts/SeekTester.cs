@@ -50,7 +50,7 @@ public class SeekTester : MonoBehaviour
 
         m_Source.playOnAwake = false;
         m_Source.spatialBlend = 0f;          // 2D so it's audible without positioning
-        m_Source.generator = m_Generator;    // play the clip through the SampleProvider generator
+        m_Source.generator = m_Generator;    // play the clip through the wrapping generator
         // Intentionally NOT playing here — starts stopped.
     }
 
