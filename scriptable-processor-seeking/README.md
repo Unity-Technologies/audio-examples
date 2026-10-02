@@ -26,13 +26,13 @@ A seek is a message sent to a **live** generator instance. There are two forms:
 
 | Call | Effect |
 |------|--------|
-| `new SeekMessage(offset)` | Immediate seek: jump to `offset` at the next process block. |
-| `new SeekMessage(offset, when)` | Scheduled seek: jump to `offset` when the timeline reaches `when`. |
+| `new SeekMessage(destination)` | Immediate seek: jump to `destination` at the next process block. |
+| `new SeekMessage(destination, when)` | Scheduled seek: jump to `destination` when the timeline reaches `when`. |
 
-Both `offset` and `when` are [`DiscreteTime`][integertime] values; `DiscreteTime(int)` is interpreted as whole seconds here. The message is delivered with:
+Both `destination` and `when` are [`DiscreteTime`][integertime] values; `DiscreteTime(int)` is interpreted as whole seconds here. The message is delivered with:
 
 ```csharp
-var msg = new SeekMessage(offset, when);
+var msg = new SeekMessage(destination, when);
 var response = ControlContext.builtIn.SendMessage(instance, ref msg);
 ```
 
