@@ -5,7 +5,7 @@ This example demonstrates **scriptable effects**: custom audio processors that t
 - A chain of effect components on a single `AudioSource`, processed in component order, assembled at runtime, while the audio source plays.
 - Addressing one effect out of several with `AudioSource.GetEffectInstance`, and bypassing it by disabling its component.
 - Filter coefficients derived from the audio configuration in `Configure`, and rebuilt when the output device changes.
-- Data travelling out of the audio thread: the noise gate reports its envelope over the pipe, and the control part hands it back to the UI through a query message.
+- Data traveling out of the audio thread: the noise gate reports its envelope over the pipe, and the control part hands it back to the UI through a query message.
 - A nested generator owned by an effect: the hiss effect creates a white noise generator, renders it into a scratch buffer from its own `Process`, and destroys it when the effect goes away.
 
 The project targets Unity 6.7 and is built on the [scriptable audio pipeline][manual] APIs, specifically the part covered in the [effects][effects] section.
@@ -65,5 +65,5 @@ This is meant as a teaching example. A few things are intentionally limited:
 - **One-pole filters**: The band pass is two first-order sections, so its slopes are gentle. A real radio effect would use steeper filters, at the cost of a longer example.
 - **No parameter smoothing**: Parameters jump to their new value when a message arrives. Dragging a slider fast can produce a small click. Production effects ramp between values across a buffer.
 - **Fixed channel budget**: The band pass and the hiss effect size their buffers for eight channels, which covers every `AudioSpeakerMode`. Anything wider passes through untouched.
-- **Coarse spectrum**: The analysis splits the signal into sixteen log-spaced bands, which is enough to see the band pass and the drive at work but far short of a transform. A real analyser would use an FFT, at the cost of moving readings through shared memory rather than the pipe.
+- **Coarse spectrum**: The analysis splits the signal into sixteen log-spaced bands, which is enough to see the band pass and the drive at work but far short of a transform. A real analyzer would use an FFT, at the cost of moving readings through shared memory rather than the pipe.
 - **Correlated noise**: The hiss effect writes the same noise sample to every channel, so the static is mono. Decorrelated noise would need one random stream per channel.

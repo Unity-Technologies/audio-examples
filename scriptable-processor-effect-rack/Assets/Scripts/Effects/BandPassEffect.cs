@@ -8,14 +8,12 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Band-limits the signal to a narrow speech band. Throwing away the lowest and highest octaves is
-    /// most of what makes a voice sound like it came out of a small radio speaker.
-    ///
-    /// This effect is the example of a filter whose coefficients depend on the sample rate: they are
-    /// computed on the control side, in Configure and whenever a parameter changes, and the audio
-    /// thread only ever sees finished numbers.
-    /// </summary>
+    // Band-limits the signal to a narrow speech band. Throwing away the lowest and highest octaves is
+    // most of what makes a voice sound like it came out of a small radio speaker.
+    //
+    // This effect is the example of a filter whose coefficients depend on the sample rate: they are
+    // computed on the control side, in Configure and whenever a parameter changes, and the audio
+    // thread only ever sees finished numbers.
     [BurstCompile(CompileSynchronously = true)]
     struct BandPassProcessor : EffectInstance.IRealtime
     {
@@ -23,7 +21,7 @@ namespace RadioEffectRack
         // channels never needs a bigger allocation.
         const int k_MaxChannels = 8;
 
-        /// <summary>Cutoffs in Hz. Sent from the component with ControlContext.SendMessage.</summary>
+        // Cutoffs in Hz. Sent from the component with ControlContext.SendMessage.
         internal struct Cutoffs
         {
             internal float lowCutHz;
@@ -36,10 +34,8 @@ namespace RadioEffectRack
             }
         }
 
-        /// <summary>
-        /// One-pole coefficients, which is what the audio thread actually needs. Sent over the pipe by
-        /// the control part, so the conversion from Hz never happens in Process.
-        /// </summary>
+        // One-pole coefficients, which is what the audio thread actually needs. Sent over the pipe by
+        // the control part, so the conversion from Hz never happens in Process.
         struct Coefficients
         {
             internal float lowPass;
@@ -50,7 +46,7 @@ namespace RadioEffectRack
         internal NativeArray<float> lowPassState;
         internal NativeArray<float> highPassState;
 
-        /// <summary>Zeroes the filter memory. Called from Configure, where the realtime part is idle.</summary>
+        // Zeroes the filter memory. Called from Configure, where the realtime part is idle.
         internal void ClearState()
         {
             for (var channel = 0; channel < lowPassState.Length; channel++)
@@ -183,7 +179,7 @@ namespace RadioEffectRack
                 highPass = OnePole(m_Cutoffs.lowCutHz, m_SampleRate),
             };
 
-            /// <summary>The usual one-pole coefficient, 1 - exp(-2*pi*f/sampleRate).</summary>
+            // The usual one-pole coefficient, 1 - exp(-2*pi*f/sampleRate).
             static float OnePole(float cutoffHz, int sampleRate)
             {
                 if (sampleRate <= 0)
@@ -194,10 +190,8 @@ namespace RadioEffectRack
         }
     }
 
-    /// <summary>
-    /// Add this next to an AudioSource to band-limit whatever the source plays. Unity finds the
-    /// component on its own: there is no field to assign.
-    /// </summary>
+    // Add this next to an AudioSource to band-limit whatever the source plays. Unity finds the
+    // component on its own: there is no field to assign.
     [RequireComponent(typeof(AudioSource))]
     public class BandPassEffect : MonoBehaviour, IAudioEffect
     {

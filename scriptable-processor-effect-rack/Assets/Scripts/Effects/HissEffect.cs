@@ -9,13 +9,11 @@ using Random = UnityEngine.Random;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Mixes a bed of static under the signal, so the channel sounds open even between phrases.
-    ///
-    /// The noise comes from a nested <see cref="WhiteNoiseGenerator"/>. An effect that owns a nested
-    /// processor owns all of it: create it with the format it will run at, tick it from the control
-    /// part, render it from Process inside the same mix cycle, and destroy it in Dispose.
-    /// </summary>
+    // Mixes a bed of static under the signal, so the channel sounds open even between phrases.
+    //
+    // The noise comes from a nested WhiteNoiseGenerator. An effect that owns a nested processor owns
+    // all of it: create it with the format it will run at, tick it from the control part, render it
+    // from Process inside the same mix cycle, and destroy it in Dispose.
     [BurstCompile(CompileSynchronously = true)]
     struct HissProcessor : EffectInstance.IRealtime
     {
@@ -23,7 +21,7 @@ namespace RadioEffectRack
         // tops out at 7.1.
         const int k_MaxChannels = 8;
 
-        /// <summary>Static level, linear. Sent from the component and forwarded over the pipe.</summary>
+        // Static level, linear. Sent from the component and forwarded over the pipe.
         internal struct Level
         {
             internal float level;
@@ -151,7 +149,7 @@ namespace RadioEffectRack
         }
     }
 
-    /// <summary>Add this next to an AudioSource to mix static under whatever the source plays.</summary>
+    // Add this next to an AudioSource to mix static under whatever the source plays.
     [RequireComponent(typeof(AudioSource))]
     public class HissEffect : MonoBehaviour, IAudioEffect
     {

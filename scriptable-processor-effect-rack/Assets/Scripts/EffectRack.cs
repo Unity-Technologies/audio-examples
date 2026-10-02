@@ -5,14 +5,12 @@ using UnityEngine.Audio;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Transport and effect rack. Drives the AudioSource, lists the effect chain in the order the audio system sees it,
-    /// edits each effect, and rebuilds the rack during playback.
-    /// </summary>
+    // Transport and effect rack. Drives the AudioSource, lists the effect chain in the order the audio system sees it,
+    // edits each effect, and rebuilds the rack during playback.
     [RequireComponent(typeof(AudioSource))]
     public class EffectRack : MonoBehaviour
     {
-        /// <summary>What an effect's header row was asked to do this frame.</summary>
+        // What an effect's header row was asked to do this frame.
         enum EffectAction
         {
             None,
@@ -21,7 +19,7 @@ namespace RadioEffectRack
             MoveDown,
         }
 
-        /// <summary>A named rack, built by adding effects in the order they should run.</summary>
+        // A named rack, built by adding effects in the order they should run.
         readonly struct Preset
         {
             public string label { get; }
@@ -130,10 +128,8 @@ namespace RadioEffectRack
             }
         }
 
-        /// <summary>
-        /// Rebuilds the chain from the components on this GameObject. Reading it every frame is what
-        /// keeps the panel honest when an effect is added or removed, whether from here or the Inspector.
-        /// </summary>
+        // Rebuilds the chain from the components on this GameObject. Reading it every frame is what
+        // keeps the panel honest when an effect is added or removed, whether from here or the Inspector.
         void RefreshEffects()
         {
             GetComponents(m_Components);
@@ -174,7 +170,7 @@ namespace RadioEffectRack
             if (Event.current.type == EventType.Layout)
                 RefreshEffects();
 
-            // Fit the view rather than assume there is room, and centre what fits.
+            // Fit the view rather than assume there is room, and center what fits.
             var width = Mathf.Min(k_PanelWidth, Screen.width - 2f * k_PanelMargin);
             var height = Mathf.Max(0f, Screen.height - 2f * k_PanelMargin);
 
@@ -343,7 +339,7 @@ namespace RadioEffectRack
                 gameObject.AddComponent(pendingAddition);
         }
 
-        /// <summary>Effect name, position in the chain, reorder buttons, bypass toggle, remove button.</summary>
+        // Effect name, position in the chain, reorder buttons, bypass toggle, remove button.
         static EffectAction Header(int index, int count, string label, Behaviour effect)
         {
             var action = EffectAction.None;
@@ -376,7 +372,7 @@ namespace RadioEffectRack
             return action;
         }
 
-        /// <summary>Draws a horizontal rule across the panel, to separate one section from the next.</summary>
+        // Draws a horizontal rule across the panel, to separate one section from the next.
         static void DrawDivider()
         {
             var rect = GUILayoutUtility.GetRect(1f, 2f, GUILayout.ExpandWidth(true));
@@ -387,10 +383,8 @@ namespace RadioEffectRack
             GUI.color = previousColor;
         }
 
-        /// <summary>
-        /// Shows the envelope the audio thread last reported, and whether the gate is open. The value
-        /// comes back through a query message, so nothing here touches the audio thread directly.
-        /// </summary>
+        // Shows the envelope the audio thread last reported, and whether the gate is open. The value
+        // comes back through a query message, so nothing here touches the audio thread directly.
         void DrawGateMeter()
         {
             GUILayout.Label(m_HasEnvelope
@@ -407,12 +401,12 @@ namespace RadioEffectRack
             var fill = new Rect(rect.x + 1f, rect.y + 1f, (rect.width - 2f) * normalized, rect.height - 2f);
 
             var previousColor = GUI.color;
-            GUI.color = m_GateIsOpen ? Color.green : Color.grey;
+            GUI.color = m_GateIsOpen ? Color.green : Color.gray;
             GUI.DrawTexture(fill, Texture2D.whiteTexture);
             GUI.color = previousColor;
         }
 
-        /// <summary>Draws the band levels as a histogram, lowest frequency on the left.</summary>
+        // Draws the band levels as a histogram, lowest frequency on the left.
         void DrawSpectrum()
         {
             var bands = m_Spectrum ? SpectrumEffect.bandCount : 0;
@@ -455,10 +449,8 @@ namespace RadioEffectRack
         const float k_SpectrumFloorDb = -60f;
         const float k_SpectrumCeilingDb = -6f;
 
-        /// <summary>
-        /// Draws labels as buttons of one width, starting a new row every <paramref name="perRow"/>, so
-        /// a long row is never squeezed until its text is clipped. Returns the index clicked, or -1.
-        /// </summary>
+        // Draws labels as buttons of one width, starting a new row every perRow, so
+        // a long row is never squeezed until its text is clipped. Returns the index clicked, or -1.
         static int WrappedButtons(List<string> labels, float width, int perRow)
         {
             var clicked = -1;
@@ -505,7 +497,7 @@ namespace RadioEffectRack
             return type.Name;
         }
 
-        /// <summary>Clears the rack, then rebuilds it from the preset once the old effects are gone.</summary>
+        // Clears the rack, then rebuilds it from the preset once the old effects are gone.
         void LoadPreset(Preset preset)
         {
             ClearRack();
@@ -514,10 +506,8 @@ namespace RadioEffectRack
             m_PendingKeepCount = 0;
         }
 
-        /// <summary>
-        /// Removes every effect. Destroying a component destroys its effect instance, so the whole
-        /// chain and all of its state goes with it.
-        /// </summary>
+        // Removes every effect. Destroying a component destroys its effect instance, so the whole
+        // chain and all of its state goes with it.
         void ClearRack()
         {
             foreach (var effect in m_Effects)
@@ -534,14 +524,12 @@ namespace RadioEffectRack
             m_PendingKeepCount = 0;
         }
 
-        /// <summary>
-        /// Moves an effect one place along the chain.
-        ///
-        /// Chain order is component order, and at runtime a component can only be appended: the
-        /// reorder API is editor-only. So everything from the swap onwards is destroyed and added
-        /// again in the new order, carrying its current settings across. Effects before the swap are
-        /// left alone and keep their instances, and their filter state with them.
-        /// </summary>
+        // Moves an effect one place along the chain.
+        //
+        // Chain order is component order, and at runtime a component can only be appended: the
+        // reorder API is editor-only. So everything from the swap onwards is destroyed and added
+        // again in the new order, carrying its current settings across. Effects before the swap are
+        // left alone and keep their instances, and their filter state with them.
         void MoveEffect(int index, int delta)
         {
             var target = index + delta;
@@ -602,10 +590,8 @@ namespace RadioEffectRack
             m_PendingKeepCount = first;
         }
 
-        /// <summary>
-        /// Returns a step that adds one effect of the same type with the settings it has right now.
-        /// This is what lets an effect survive being destroyed and added again in a new position.
-        /// </summary>
+        // Returns a step that adds one effect of the same type with the settings it has right now.
+        // This is what lets an effect survive being destroyed and added again in a new position.
         static Action<GameObject> Capture(Behaviour effect)
         {
             switch (effect)

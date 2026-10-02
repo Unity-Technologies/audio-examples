@@ -8,20 +8,18 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Measures the signal without changing it, and reports the level in each of sixteen frequency
-    /// bands so the panel can draw them as a histogram.
-    ///
-    /// The frequency split is a bank of two-pole state-variable band-pass filters rather than an FFT,
-    /// which keeps a reading down to sixteen numbers. That fits in a single <see cref="float4x4"/>, so
-    /// it rides the pipe as one message per mix block and the audio thread and the UI share no memory.
-    ///
-    /// The filters need to be selective to be worth drawing. A pair of one-poles, as BandPassEffect
-    /// uses to shape audio, only rejects about 6 dB two octaves from its center, so every band would
-    /// mostly report the overall level. These reject about 22 dB, which is enough to see a spectrum.
-    ///
-    /// It is an ordinary effect component, so where it sits in the chain decides what it measures.
-    /// </summary>
+    // Measures the signal without changing it, and reports the level in each of sixteen frequency
+    // bands so the panel can draw them as a histogram.
+    //
+    // The frequency split is a bank of two-pole state-variable band-pass filters rather than an FFT,
+    // which keeps a reading down to sixteen numbers. That fits in a single float4x4, so it rides the
+    // pipe as one message per mix block and the audio thread and the UI share no memory.
+    //
+    // The filters need to be selective to be worth drawing. A pair of one-poles, as BandPassEffect
+    // uses to shape audio, only rejects about 6 dB two octaves from its center, so every band would
+    // mostly report the overall level. These reject about 22 dB, which is enough to see a spectrum.
+    //
+    // It is an ordinary effect component, so where it sits in the chain decides what it measures.
     [BurstCompile(CompileSynchronously = true)]
     struct SpectrumProcessor : EffectInstance.IRealtime
     {
@@ -38,11 +36,9 @@ namespace RadioEffectRack
         // Damping. The band-pass output peaks at Q, so the same number scales it back to unity.
         const float k_Damping = 1f / k_Q;
 
-        /// <summary>
-        /// One band: a topology-preserving state-variable filter and the envelope of its band-pass
-        /// output. The three coefficients come from the centre frequency and Q; the two state values
-        /// are the integrators.
-        /// </summary>
+        // One band: a topology-preserving state-variable filter and the envelope of its band-pass
+        // output. The three coefficients come from the center frequency and Q; the two state values
+        // are the integrators.
         internal struct Band
         {
             internal float a1;
@@ -53,16 +49,14 @@ namespace RadioEffectRack
             internal float envelope;
         }
 
-        /// <summary>One reading of every band, posted once per mix block.</summary>
+        // One reading of every band, posted once per mix block.
         struct Reading
         {
             internal float4x4 levels;
         }
 
-        /// <summary>
-        /// Sent by the UI to read the newest levels out. Messages are passed by reference, so the control
-        /// part answers by writing the whole reading into the message, lowest band first.
-        /// </summary>
+        // Sent by the UI to read the newest levels out. Messages are passed by reference, so the control
+        // part answers by writing the whole reading into the message, lowest band first.
         internal struct LevelQuery
         {
             internal float4x4 levels;
@@ -141,7 +135,7 @@ namespace RadioEffectRack
             return default;
         }
 
-        /// <summary>Four band envelopes, so a whole column packs into one matrix.</summary>
+        // Four band envelopes, so a whole column packs into one matrix.
         float4 Group(int first) => new float4(
             bands[first].envelope,
             bands[first + 1].envelope,
@@ -168,9 +162,9 @@ namespace RadioEffectRack
 
                 for (var index = 0; index < k_BandCount; index++)
                 {
-                    var centre = k_LowestHz * math.pow(2f, octaves * index / (k_BandCount - 1f));
+                    var center = k_LowestHz * math.pow(2f, octaves * index / (k_BandCount - 1f));
 
-                    processor.bands[index] = Coefficients(centre, sampleRate);
+                    processor.bands[index] = Coefficients(center, sampleRate);
                 }
 
                 processor.m_AttackCoefficient = TimeConstant(k_AttackMs, sampleRate);
@@ -188,7 +182,7 @@ namespace RadioEffectRack
                 Drain(context, pipe);
             }
 
-            /// <summary>Keeps the newest reading the audio thread has posted.</summary>
+            // Keeps the newest reading the audio thread has posted.
             void Drain(ControlContext context, Pipe pipe)
             {
                 foreach (var element in pipe.GetAvailableData(context))
@@ -219,17 +213,15 @@ namespace RadioEffectRack
                 return Response.Handled;
             }
 
-            /// <summary>
-            /// Pre-warped coefficients for one band, with its integrator state left at zero.
-            /// </summary>
-            static Band Coefficients(float centreHz, int sampleRate)
+            // Pre-warped coefficients for one band, with its integrator state left at zero.
+            static Band Coefficients(float centerHz, int sampleRate)
             {
                 if (sampleRate <= 0)
                     return default;
 
                 // Clear of Nyquist, where the pre-warping runs away.
-                var centre = math.min(centreHz, sampleRate * 0.45f);
-                var g = math.tan(math.PI * centre / sampleRate);
+                var center = math.min(centerHz, sampleRate * 0.45f);
+                var g = math.tan(math.PI * center / sampleRate);
                 var a1 = 1f / (1f + g * (g + k_Damping));
                 var a2 = g * a1;
 
@@ -241,7 +233,7 @@ namespace RadioEffectRack
                 };
             }
 
-            /// <summary>One-pole coefficient for a time constant given in milliseconds.</summary>
+            // One-pole coefficient for a time constant given in milliseconds.
             static float TimeConstant(float milliseconds, int sampleRate)
             {
                 if (sampleRate <= 0)
@@ -254,23 +246,23 @@ namespace RadioEffectRack
         }
     }
 
-    /// <summary>Add this next to an AudioSource to watch the spectrum at that point in the chain.</summary>
+    // Add this next to an AudioSource to watch the spectrum at that point in the chain.
     [RequireComponent(typeof(AudioSource))]
     public class SpectrumEffect : MonoBehaviour, IAudioEffect
     {
         AudioSource m_Source;
         float4x4 m_Levels;
 
-        /// <summary>How many bands a reading holds, lowest first.</summary>
+        // How many bands a reading holds, lowest first.
         public static int bandCount => SpectrumProcessor.k_BandCount;
 
-        /// <summary>Center frequency of the lowest band.</summary>
+        // Center frequency of the lowest band.
         public static float lowestHz => SpectrumProcessor.k_LowestHz;
 
-        /// <summary>Center frequency of the highest band.</summary>
+        // Center frequency of the highest band.
         public static float highestHz => SpectrumProcessor.k_HighestHz;
 
-        /// <summary>The level of one band from the last read, lowest band first.</summary>
+        // The level of one band from the last read, lowest band first.
         public float Level(int band)
         {
             if (band < 0 || band >= SpectrumProcessor.k_BandCount)
@@ -294,7 +286,7 @@ namespace RadioEffectRack
                 creationParameters);
         }
 
-        /// <summary>Reads the newest levels out of the running effect. False when it isn't running.</summary>
+        // Reads the newest levels out of the running effect. False when it isn't running.
         public bool TryReadLevels()
         {
             if (!enabled || !m_Source.isPlaying || m_Source.bypassEffects

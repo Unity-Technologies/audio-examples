@@ -7,17 +7,15 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Silences the signal between phrases, the way a squelch circuit does. An envelope follower tracks
-    /// the loudest channel, and the gate opens while that envelope sits above the threshold.
-    ///
-    /// This effect is the example of data traveling the other way: the audio thread posts the envelope
-    /// to the control side over the pipe, and the control side hands it back to the UI when asked.
-    /// </summary>
+    // Silences the signal between phrases, the way a squelch circuit does. An envelope follower tracks
+    // the loudest channel, and the gate opens while that envelope sits above the threshold.
+    //
+    // This effect is the example of data traveling the other way: the audio thread posts the envelope
+    // to the control side over the pipe, and the control side hands it back to the UI when asked.
     [BurstCompile(CompileSynchronously = true)]
     struct NoiseGateProcessor : EffectInstance.IRealtime
     {
-        /// <summary>Gate parameters in the units a person thinks in. Sent from the component.</summary>
+        // Gate parameters in the units a person thinks in. Sent from the component.
         internal struct Settings
         {
             internal float thresholdDb;
@@ -25,7 +23,7 @@ namespace RadioEffectRack
             internal float releaseMs;
         }
 
-        /// <summary>The same settings converted for the audio thread. Sent over the pipe.</summary>
+        // The same settings converted for the audio thread. Sent over the pipe.
         struct Tuning
         {
             internal float threshold;
@@ -33,17 +31,15 @@ namespace RadioEffectRack
             internal float release;
         }
 
-        /// <summary>What the audio thread reports back, once per real-time update.</summary>
+        // What the audio thread reports back, once per real-time update.
         internal struct Status
         {
             internal float envelope;
             internal bool isOpen;
         }
 
-        /// <summary>
-        /// Sent by the UI to read the newest <see cref="Status"/> back out. Messages are passed by
-        /// reference, so the control part answers by writing into the message.
-        /// </summary>
+        // Sent by the UI to read the newest Status back out. Messages are passed by reference, so the
+        // control part answers by writing into the message.
         internal struct StatusQuery
         {
             internal Status status;
@@ -134,7 +130,7 @@ namespace RadioEffectRack
                 Drain(context, pipe);
             }
 
-            /// <summary>Takes every reading the audio thread has posted and keeps the newest.</summary>
+            // Takes every reading the audio thread has posted and keeps the newest.
             void Drain(ControlContext context, Pipe pipe)
             {
                 foreach (var element in pipe.GetAvailableData(context))
@@ -187,7 +183,7 @@ namespace RadioEffectRack
                 release = TimeConstant(m_Settings.releaseMs, m_SampleRate),
             };
 
-            /// <summary>One-pole coefficient for a time constant given in milliseconds.</summary>
+            // One-pole coefficient for a time constant given in milliseconds.
             static float TimeConstant(float milliseconds, int sampleRate)
             {
                 if (sampleRate <= 0)
@@ -200,7 +196,7 @@ namespace RadioEffectRack
         }
     }
 
-    /// <summary>Add this next to an AudioSource to gate whatever the source plays.</summary>
+    // Add this next to an AudioSource to gate whatever the source plays.
     [RequireComponent(typeof(AudioSource))]
     public class NoiseGateEffect : MonoBehaviour, IAudioEffect
     {
@@ -234,10 +230,8 @@ namespace RadioEffectRack
                 creationParameters);
         }
 
-        /// <summary>
-        /// Reads the newest envelope back out of the running effect. Returns false when the effect is
-        /// not running, or has not reported anything yet.
-        /// </summary>
+        // Reads the newest envelope back out of the running effect. Returns false when the effect is
+        // not running, or has not reported anything yet.
         public bool TryGetEnvelope(out float envelopeDb, out bool isOpen)
         {
             envelopeDb = k_SilenceDb;

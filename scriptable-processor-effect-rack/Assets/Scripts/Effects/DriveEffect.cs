@@ -7,21 +7,17 @@ using static UnityEngine.Audio.ProcessorInstance;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// Pushes the signal into a soft clipper, then trims the result back down. Cheap transmitter
-    /// distortion, and the simplest complete effect in this project: no state, no allocation.
-    ///
-    /// The clipper normalizes its own peak, but clipping raises the average level far more than the
-    /// peak, so a driven signal still sounds much louder. The output trim is what makes it possible to
-    /// match levels while dialing the drive around.
-    /// </summary>
+    // Pushes the signal into a soft clipper, then trims the result back down. Cheap transmitter
+    // distortion, and the simplest complete effect in this project: no state, no allocation.
+    //
+    // The clipper normalizes its own peak, but clipping raises the average level far more than the
+    // peak, so a driven signal still sounds much louder. The output trim is what makes it possible to
+    // match levels while dialing the drive around.
     [BurstCompile(CompileSynchronously = true)]
     struct DriveProcessor : EffectInstance.IRealtime
     {
-        /// <summary>
-        /// Pre-gain into the clipper, and the linear gain applied after it. Travels from the component
-        /// and over the pipe unchanged.
-        /// </summary>
+        // Pre-gain into the clipper, and the linear gain applied after it. Travels from the component
+        // and over the pipe unchanged.
         internal struct Settings
         {
             internal float drive;
@@ -104,7 +100,7 @@ namespace RadioEffectRack
         }
     }
 
-    /// <summary>Add this next to an AudioSource to overdrive whatever the source plays.</summary>
+    // Add this next to an AudioSource to overdrive whatever the source plays.
     [RequireComponent(typeof(AudioSource))]
     public class DriveEffect : MonoBehaviour, IAudioEffect
     {

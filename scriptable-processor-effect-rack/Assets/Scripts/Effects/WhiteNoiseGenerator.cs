@@ -7,13 +7,11 @@ using Random = Unity.Mathematics.Random;
 
 namespace RadioEffectRack
 {
-    /// <summary>
-    /// White noise, used by <see cref="HissEffect"/> as its static bed.
-    ///
-    /// Nothing in here knows that it runs nested inside an effect: a generator is written the same way
-    /// whether an AudioSource drives it or another processor does. The difference is all on the owning
-    /// side, which creates it, updates it, renders it, and destroys it.
-    /// </summary>
+    // White noise, used by HissEffect as its static bed.
+    //
+    // Nothing in here knows that it runs nested inside an effect: a generator is written the same way
+    // whether an AudioSource drives it or another processor does. The difference is all on the owning
+    // side, which creates it, updates it, renders it, and destroys it.
     [BurstCompile(CompileSynchronously = true)]
     struct WhiteNoiseGenerator : GeneratorInstance.IRealtime
     {
