@@ -200,6 +200,8 @@ namespace RadioEffectRack
     [RequireComponent(typeof(AudioSource))]
     public class NoiseGateEffect : MonoBehaviour, IAudioEffect
     {
+        internal const float k_SilenceDb = -80f;
+
         [Tooltip("The gate opens while the signal sits above this level.")]
         [Range(-60f, 0f)]
         public float thresholdDb = -34f;
@@ -259,8 +261,6 @@ namespace RadioEffectRack
 
             return true;
         }
-
-        internal const float k_SilenceDb = -80f;
 
         void Awake()
         {

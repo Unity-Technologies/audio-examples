@@ -5,8 +5,8 @@ using UnityEngine.Audio;
 
 namespace RadioEffectRack
 {
-    // Transport and effect rack. Drives the AudioSource, lists the effect chain in the order the audio system sees it,
-    // edits each effect, and rebuilds the rack during playback.
+    // Transport and effect rack. Drives the AudioSource, lists the effect chain in the order the audio
+    // system sees it, edits each effect, and rebuilds the rack during playback.
     [RequireComponent(typeof(AudioSource))]
     public class EffectRack : MonoBehaviour
     {
@@ -301,11 +301,16 @@ namespace RadioEffectRack
 
             Type pendingAddition = null;
 
-            GUILayout.Space(4);
+            GUILayout.Space(15);
+            DrawDivider();
+            GUILayout.Label("Add");
+            DrawDivider();
+
+            GUILayout.Space(10);
 
             if (m_AddableLabels.Count > 0)
             {
-                GUILayout.Label("Add an effect while it plays:");
+                GUILayout.Label("Pick an effect to add while it plays:");
 
                 var addClicked = WrappedButtons(m_AddableLabels, k_ButtonWidth, k_ButtonsPerRow);
 
