@@ -60,6 +60,8 @@ sysinfo.txt
 crashlytics-build.properties
 
 # Custom
+# Local package manager state, regenerated on open by every example project
+**/ProjectSettings/PackageManager.policy
 Assets/SceneDependencyCache*
 Assets/NetCodeGenerated*
 .idea/
