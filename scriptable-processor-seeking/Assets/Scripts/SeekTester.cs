@@ -4,25 +4,23 @@ using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.Audio;
 
-/// <summary>
-/// Manual seek playground. Drag onto a GameObject (auto-adds <see cref="ClipPlayerGenerator"/> and an
-/// <see cref="AudioSource"/>), assign a clip on that component, enter Play mode.
-///
-/// - Starts STOPPED. Use the Play/Stop button.
-/// - Build up a queue of seeks: pick <c>when</c> (the clip second at which the seek fires) with the slider,
-///   then click a number button to enqueue "when the clip reaches that second, jump to number N".
-/// - You can enqueue while stopped; the queue is delivered to the generator when you press Play, in
-///   staging order. The generator applies them in that order and never reorders them by <c>when</c>, so a
-///   seek that isn't due yet holds back the ones behind it.
-/// - The staged list stays on screen after Play: entries grey out once sent to the instance, and
-///   dim further when playback ends. (The demo can't observe which seeks actually fire or are
-///   dropped inside the generator, so it shows "sent" / "played", not per-seek firing -- watch the
-///   console for the warning a dropped seek logs.)
-/// - Each seek is a <see cref="SeekMessage"/> carrying an offset and a <c>when</c>; <c>when</c> maps
-///   to sample-accurate scheduling.
-///
-/// Requires an AudioListener in the scene (Main Camera has one by default).
-/// </summary>
+// Manual seek playground. Drag onto a GameObject (auto-adds ClipPlayerGenerator and an AudioSource),
+// assign a clip on that component, enter Play mode.
+//
+// - Starts STOPPED. Use the Play/Stop button.
+// - Build up a queue of seeks: pick 'when' (the clip second at which the seek fires) with the slider,
+//   then click a number button to enqueue "when the clip reaches that second, jump to number N".
+// - You can enqueue while stopped; the queue is delivered to the generator when you press Play, in
+//   staging order. The generator applies them in that order and never reorders them by 'when', so a
+//   seek that isn't due yet holds back the ones behind it.
+// - The staged list stays on screen after Play: entries gray out once sent to the instance, and dim
+//   further when playback ends. (The demo can't observe which seeks actually fire or are dropped
+//   inside the generator, so it shows "sent" / "played", not per-seek firing -- watch the console
+//   for the warning a dropped seek logs.)
+// - Each seek is a SeekMessage carrying an offset and a 'when'; 'when' maps to sample-accurate
+//   scheduling.
+//
+// Requires an AudioListener in the scene (Main Camera has one by default).
 [RequireComponent(typeof(ClipPlayerGenerator))]
 [RequireComponent(typeof(AudioSource))]
 public class SeekTester : MonoBehaviour
@@ -87,7 +85,7 @@ public class SeekTester : MonoBehaviour
         // reorders them by 'when'. A seek that isn't due yet holds back every seek sent after it,
         // including immediate ones. When a seek reaches the head of the queue and playback is already
         // past its 'when' (an earlier seek jumped over it), the generator drops it with a warning.
-        // Sent entries are kept (and greyed in the UI) rather than cleared, so the list stays visible;
+        // Sent entries are kept (and grayed in the UI) rather than cleared, so the list stays visible;
         // each is delivered once per play session.
         for (var i = 0; i < m_Queued.Count; i++)
         {
@@ -196,7 +194,7 @@ public class SeekTester : MonoBehaviour
 
         GUILayout.Space(8);
 
-        // --- Queued list (kept visible; greyed once sent, dimmer once playback ends) ---
+        // --- Queued list (kept visible; grayed once sent, dimmer once playback ends) ---
         GUILayout.Label($"Queued ({m_Queued.Count}):");
         var prevContentColor = GUI.contentColor;
         

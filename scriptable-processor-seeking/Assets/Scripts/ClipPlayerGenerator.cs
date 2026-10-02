@@ -5,29 +5,25 @@ using Unity.IntegerTime;
 using UnityEngine;
 using UnityEngine.Audio;
 
-/// <summary>
-/// Main-thread view of a playing <see cref="ClipPlayerGenerator"/> instance.
-///
-/// The control side is an unmanaged struct living in native memory, so it can't touch a
-/// <see cref="MonoBehaviour"/> directly. It holds a <see cref="GCHandle"/> to one of these instead,
-/// which gives the realtime side's "I'm done" report a way to reach <see cref="SeekTester"/>.
-/// </summary>
+// Main-thread view of a playing ClipPlayerGenerator instance.
+//
+// The control side is an unmanaged struct living in native memory, so it can't touch a MonoBehaviour
+// directly. It holds a GCHandle to one of these instead, which gives the realtime side's "I'm done"
+// report a way to reach SeekTester.
 public class ClipPlaybackState
 {
-    /// <summary>Set once the nested clip instance reports it has finished generating audio.</summary>
+    // Set once the nested clip instance reports it has finished generating audio.
     public bool finished;
 }
 
-/// <summary>Realtime -> control notification: the nested clip instance has finished.</summary>
+// Realtime -> control notification: the nested clip instance has finished.
 struct ClipFinishedEvent { }
 
-/// <summary>
-/// Realtime side. Forwards every <c>Process</c> call to the clip's own generator instance and watches
-/// the returned <see cref="GeneratorInstance.Result"/> for completion.
-///
-/// This is the only place end-of-clip is observable: <see cref="GeneratorInstance.Result.isFinished"/>
-/// is reported to whoever drives the nested instance, and nothing publishes it to the main thread.
-/// </summary>
+// Realtime side. Forwards every Process call to the clip's own generator instance and watches the
+// returned GeneratorInstance.Result for completion.
+//
+// This is the only place end-of-clip is observable: GeneratorInstance.Result.isFinished is reported
+// to whoever drives the nested instance, and nothing publishes it to the main thread.
 [BurstCompile(CompileSynchronously = true)]
 struct ClipPlayerRealtime : GeneratorInstance.IRealtime
 {
@@ -80,10 +76,8 @@ struct ClipPlayerRealtime : GeneratorInstance.IRealtime
     }
 }
 
-/// <summary>
-/// Control side. Owns the nested clip instance, forwards <see cref="SeekMessage"/> to it, and relays
-/// the realtime side's completion report to the managed <see cref="ClipPlaybackState"/>.
-/// </summary>
+// Control side. Owns the nested clip instance, forwards SeekMessage to it, and relays the realtime
+// side's completion report to the managed ClipPlaybackState.
 struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
 {
     // The control struct is unmanaged, so managed references are held as GCHandles (see RandomContainer
@@ -186,26 +180,22 @@ struct ClipPlayerControl : GeneratorInstance.IControl<ClipPlayerRealtime>
     }
 }
 
-/// <summary>
-/// Plays an <see cref="AudioClip"/> through the clip's own generator instance, so it supports
-/// seeking via <see cref="SeekMessage"/> (a clip handles seeks out of the box).
-///
-/// Rather than handing the clip's instance straight to the AudioSource, this wraps it, so the
-/// realtime side can see the clip finish and report it back to the main thread via
-/// <see cref="playbackState"/>. Seeks are forwarded down to the clip's instance unchanged.
-///
-/// Assign a clip, then let something play it on an AudioSource
-/// (<see cref="SeekTester"/> does this: <c>audioSource.generator = thisComponent</c>).
-/// </summary>
+// Plays an AudioClip through the clip's own generator instance, so it supports seeking via
+// SeekMessage (a clip handles seeks out of the box).
+//
+// Rather than handing the clip's instance straight to the AudioSource, this wraps it, so the realtime
+// side can see the clip finish and report it back to the main thread via playbackState. Seeks are
+// forwarded down to the clip's instance unchanged.
+//
+// Assign a clip, then let something play it on an AudioSource (SeekTester does this:
+// audioSource.generator = thisComponent).
 public class ClipPlayerGenerator : MonoBehaviour, IAudioGenerator
 {
     [Tooltip("The clip to play (e.g. your 10s counting file).")]
     public AudioClip clip;
 
-    /// <summary>
-    /// State shared with the currently playing instance. Replaced on each <see cref="CreateInstance"/>,
-    /// and null until the first one is created.
-    /// </summary>
+    // State shared with the currently playing instance. Replaced on each CreateInstance, and null
+    // until the first one is created.
     public ClipPlaybackState playbackState { get; private set; }
 
     // Asset-level metadata, mirrored from the clip so this wrapper describes what it actually produces.
