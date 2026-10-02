@@ -158,7 +158,7 @@ namespace RadioEffectRack
         public float levelDb = -44f;
 
         AudioSource m_Source;
-        float m_SentLevelDb;
+        float m_SentLevel;
 
         public EffectInstance CreateInstance(ControlContext context, AudioFormat? nestedFormat,
             EffectInstance.CreationParameters creationParameters)
@@ -193,12 +193,16 @@ namespace RadioEffectRack
         void Awake()
         {
             m_Source = GetComponent<AudioSource>();
-            m_SentLevelDb = levelDb;
+            m_SentLevel = DecibelToLinear(levelDb);
         }
 
         void Update()
         {
-            if (Mathf.Approximately(levelDb, m_SentLevelDb))
+            // The static is the one effect here that adds signal rather than shaping it, so it stays
+            // audible on a stopped source unless the level is taken to zero.
+            var level = m_Source.isPlaying ? DecibelToLinear(levelDb) : 0f;
+
+            if (Mathf.Approximately(level, m_SentLevel))
                 return;
 
             var instance = m_Source.GetEffectInstance(this);
@@ -206,10 +210,10 @@ namespace RadioEffectRack
             if (!ControlContext.builtIn.Exists(instance))
                 return;
 
-            var message = new HissProcessor.Level { level = DecibelToLinear(levelDb) };
+            var message = new HissProcessor.Level { level = level };
             ControlContext.builtIn.SendMessage(instance, ref message);
 
-            m_SentLevelDb = levelDb;
+            m_SentLevel = level;
         }
 
         static float DecibelToLinear(float decibels) => Mathf.Pow(10f, decibels / 20f);
