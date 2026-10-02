@@ -11,11 +11,13 @@ using UnityEngine.Audio;
 /// - Starts STOPPED. Use the Play/Stop button.
 /// - Build up a queue of seeks: pick "when" (the clip second at which the seek fires) with the slider,
 ///   then click a number button to enqueue "when the clip reaches that second, jump to number N".
-/// - You can enqueue while stopped; the queue is delivered to the generator when you press Play,
-///   so several seeks end up scheduled on top of each other in the SampleProvider's own queue.
+/// - You can enqueue while stopped; the queue is delivered to the generator when you press Play, in
+///   staging order. The generator applies them in that order and never reorders them by "when", so a
+///   seek that isn't due yet holds back the ones behind it.
 /// - The staged list stays on screen after Play: entries grey out once sent to the instance, and
 ///   dim further when playback ends. (The demo can't observe which seeks actually fire or are
-///   dropped inside the provider, so it shows "sent" / "played", not per-seek firing.)
+///   dropped inside the generator, so it shows "sent" / "played", not per-seek firing -- watch the
+///   console for the warning a dropped seek logs.)
 /// - Each seek is a SeekMessage(offset, when); `when` maps to sample-accurate scheduling.
 ///
 /// Requires an AudioListener in the scene (Main Camera has one by default).
@@ -80,10 +82,12 @@ public class SeekTester : MonoBehaviour
     {
         var instance = m_Source.generatorInstance;
 
-        // Seeks are sent in whatever order they were staged; scheduling order is up to the caller.
-        // The sample provider fires each seek when playback reaches its 'when', and drops any seek
-        // whose 'when' has already been passed. Sent entries are kept (and greyed in the UI) rather
-        // than cleared, so the list stays visible; each is delivered once per play session.
+        // Staging order is send order, and the generator applies seeks in exactly that order -- it never
+        // reorders them by 'when'. A seek that isn't due yet holds back every seek sent after it,
+        // including immediate ones. When a seek reaches the head of the queue and playback is already
+        // past its 'when' (an earlier seek jumped over it), the generator drops it with a warning.
+        // Sent entries are kept (and greyed in the UI) rather than cleared, so the list stays visible;
+        // each is delivered once per play session.
         for (var i = 0; i < m_Queued.Count; i++)
         {
             var s = m_Queued[i];

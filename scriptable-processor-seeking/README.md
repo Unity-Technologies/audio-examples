@@ -38,7 +38,11 @@ var response = ControlContext.builtIn.SendMessage(instance, ref msg);
 
 The instance only exists a frame or so after `AudioSource.Play()`, so `SeekTester` waits until `ControlContext.builtIn.Exists(source.generatorInstance)` is true before flushing its queued seeks.
 
-Seeks can be scheduled in **any order** — the sample provider fires each one when playback reaches its `when`. A seek whose `when` playback has **already passed** (for example, one made unreachable by an earlier seek that jumped past it) is silently dropped rather than applied.
+The generator applies seeks in the order you send them. It never reorders them by `when`. A scheduled seek that isn't due yet holds back every seek sent after it, including immediate ones, so send seeks in the order you want them to happen.
+
+Each seek moves the playback position to its `destination`, and the remaining seeks' `when` values are compared against that new position. If playback has already passed a seek's `when` by the time it's next in line, for example because an earlier seek jumped past it, the generator drops it and logs a warning.
+
+If you seek while the clip is still loading, only the most recent seek is kept, and the earlier ones are dropped with a warning.
 
 [integertime]: https://docs.unity3d.com/6000.7/Documentation/ScriptReference/Unity.IntegerTime.DiscreteTime.html
 
