@@ -17,7 +17,7 @@ using UnityEngine.Audio;
 //   further when playback ends. (The demo can't observe which seeks actually fire or are dropped
 //   inside the generator, so it shows "sent" / "played", not per-seek firing -- watch the console
 //   for the warning a dropped seek logs.)
-// - Each seek is a SeekMessage carrying an offset and a 'when'; 'when' maps to sample-accurate
+// - Each seek is a SeekMessage carrying a destination and a 'when'; 'when' maps to sample-accurate
 //   scheduling.
 //
 // Requires an AudioListener in the scene (Main Camera has one by default).
@@ -94,10 +94,10 @@ public class SeekTester : MonoBehaviour
             if (s.sent)
                 continue;
 
-            var offset = new DiscreteTime(s.destSecond); // DiscreteTime(int) is seconds
+            var destination = new DiscreteTime(s.destSecond); // DiscreteTime(int) is seconds
             var msg = s.immediate
-                ? new SeekMessage(offset) // when omitted = immediate
-                : new SeekMessage(offset, new DiscreteTime(s.whenSecond));
+                ? new SeekMessage(destination) // when omitted = immediate
+                : new SeekMessage(destination, new DiscreteTime(s.whenSecond));
 
             var response = ControlContext.builtIn.SendMessage(instance, ref msg);
             Debug.Log($"Sent seek: hear {s.destSecond + 1} " +
