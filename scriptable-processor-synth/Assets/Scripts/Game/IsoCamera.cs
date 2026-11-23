@@ -6,6 +6,7 @@ public class IsoCamera : MonoBehaviour
 {
     public Transform target;
     public float size = 7f, smooth = 6f;
+    bool snapped;
 
     void Start()
     {
@@ -19,6 +20,8 @@ public class IsoCamera : MonoBehaviour
     {
         if (!target) return;
         Vector3 want = target.position - transform.forward * 40f;
+        // snap on the first frame: gliding in from the scene camera's start position puts the piano behind the near plane
+        if (!snapped) { transform.position = want; snapped = true; return; }
         transform.position = Vector3.Lerp(transform.position, want, 1f - Mathf.Exp(-smooth * Time.deltaTime));
     }
 }
