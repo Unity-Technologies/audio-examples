@@ -336,8 +336,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArpEngine
   enabledArp: 1
-  startAt: 4
-  maxNotes: 10
+  startAt: 3
+  maxNotes: 4
   idleSeconds: 10
   gain: 0.6
   length: 0.18

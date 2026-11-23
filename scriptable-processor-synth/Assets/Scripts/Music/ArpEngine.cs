@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Minimal arp: remembers the last landed melody notes; from 4 notes it cycles them up-down on the audio clock.
+// Minimal arp: remembers the last landed melody notes; from 3 notes (max 4) it cycles them up-down on the audio clock.
 // More notes = more delay and reverb. Pool empties after idleSeconds without a landing.
 public class ArpEngine : MonoBehaviour
 {
     public static ArpEngine Instance;
     public bool enabledArp = true;
-    public int startAt = 4, maxNotes = 10;
+    public int startAt = 3, maxNotes = 4;
     public float idleSeconds = 10f;
     public float gain = 0.35f, length = 0.18f;
 
